@@ -5,329 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>宝宝成长相册 - 严屹琛</title>
     <link rel="stylesheet" href="style.css">
-    <!-- 引入 Fancybox 用于图片点击放大 -->
+    <!-- 引入 Fancybox -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
     
     <style>
-        body {
-            background-color: #fff5f5;
-            min-height: 100vh;
-            padding: 0;
-        }
-        .gallery-container {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .back-btn {
-            display: inline-block;
-            margin-bottom: 20px;
-            padding: 8px 15px;
-            background: #fff;
-            border-radius: 20px;
-            text-decoration: none;
-            color: #d32f2f;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+        body { background-color: #fff5f5; min-height: 100vh; padding: 0; }
+        .gallery-container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .back-btn { display: inline-block; margin-bottom: 20px; padding: 8px 15px; background: #fff; border-radius: 20px; text-decoration: none; color: #d32f2f; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .section-title { color: #d32f2f; margin: 20px 0 10px; border-left: 4px solid #d32f2f; padding-left: 10px; font-size: 1.2rem; }
         
-        .section-title {
-            color: #d32f2f;
-            margin: 20px 0 10px;
-            border-left: 4px solid #d32f2f;
-            padding-left: 10px;
-            font-size: 1.2rem;
-        }
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        
+        /* 新版卡片样式 */
+        .media-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
+        .media-thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+        .pinned-badge { position: absolute; top: 5px; left: 5px; background: #ffd700; color: #d32f2f; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        /* 交互栏 */
+        .card-actions { display: flex; justify-content: space-between; padding: 8px 10px; border-top: 1px solid #eee; align-items: center; }
+        .action-btn { border: none; background: none; cursor: pointer; font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 4px; }
+        .action-btn.liked { color: #d32f2f; }
+        
+        /* 评论区预览 */
+        .comment-preview { padding: 0 10px 10px; font-size: 0.8rem; color: #888; }
+        .comment-item { margin-top: 4px; background: #f9f9f9; padding: 4px; border-radius: 4px; }
 
-        /* 瀑布流/网格布局 */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 两列显示 */
-            gap: 10px;
-        }
-        
-        .gallery-item {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            aspect-ratio: 1 / 1; /* 正方形缩略图 */
-        }
-        
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.3s;
-        }
-        
-        /* 视频播放图标 */
-        .video-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2rem;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            pointer-events: none;
-        }
+        /* 管理员置顶按钮 (平时隐藏) */
+        .admin-pin-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; display: none; z-index: 3; }
+        .admin-mode .admin-pin-btn { display: block; }
 
-        /* 视频容器 */
-        .video-container {
-            margin-bottom: 30px;
-        }
-        .video-wrapper {
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .video-wrapper video {
-            width: 100%;
-            display: block;
-        }
-        .video-caption {
-            padding: 10px;
-            background: #fff;
-            color: #666;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        /* 底部 */
-        .end-text {
-            text-align: center;
-            color: #999;
-            margin: 40px 0;
-            font-size: 0.8rem;
-            cursor: pointer;
-            user-select: none;
-        }
+        .video-wrapper video { width: 100%; display: block; border-radius: 8px; }
+        
+        .end-text { text-align: center; color: #999; margin: 40px 0; font-size: 0.8rem; cursor: pointer; user-select: none; }
     </style>
 </head>
 <body>
 
     <div class="gallery-container">
-        <!-- 返回按钮 -->
         <a href="index.html" class="back-btn">⬅ 返回邀请函</a>
-
-        <!-- 隐藏彩蛋触发区：点击标题5次 -->
         <h1 id="secretTitle" style="text-align: center; color: #d32f2f; margin-bottom: 30px; cursor: pointer;">👶 屹琛成长记录</h1>
 
-        <!-- 视频区域 -->
-        <div class="section-title">🎥 精彩视频</div>
-        <div class="video-container">
-            <!-- 视频1 -->
-            <div class="video-wrapper">
-                <video controls poster="babyimage/video_cover.jpg">
-                    <source src="babyimage/video1.mp4" type="video/mp4">
-                    您的浏览器不支持视频播放。
-                </video>
-                <div class="video-caption">第一次抬头</div>
-            </div>
+        <!-- 视频区域 (随机展示) -->
+        <div class="section-title">🎥 精彩视频 (随机播放)</div>
+        <div class="gallery-grid" id="videoContainer">
+            <!-- JS 动态插入 -->
         </div>
 
         <!-- 照片区域 -->
         <div class="section-title">📸 精彩瞬间</div>
-        <div class="gallery-grid">
-            
-            <!-- 示例：普通照片 -->
-            <div class="gallery-item">
-                <a href="babyimage/1.jpg" data-fancybox="gallery" data-caption="可爱的宝宝">
-                    <img src="babyimage/1.jpg" alt="宝宝照片">
-                </a>
-            </div>
-
-            <!-- 示例：模拟实况照片 (Live Photo) -->
-            <!-- 将实况的mov文件作为href，jpg作为封面 -->
-            <div class="gallery-item">
-                <a href="babyimage/live1.mp4" data-fancybox="gallery" data-caption="实况：第一次笑 (Live Photo)">
-                    <img src="babyimage/live1.jpg" alt="实况照片封面">
-                    <span class="video-icon">▶</span>
-                </a>
-            </div>
-
-            <!-- 图片 2 -->
-            <div class="gallery-item">
-                <a href="babyimage/2.jpg" data-fancybox="gallery" data-caption="睡觉觉">
-                    <img src="babyimage/2.jpg" alt="宝宝照片">
-                </a>
-            </div>
-
-            <!-- 图片 3 -->
-            <div class="gallery-item">
-                <a href="babyimage/3.jpg" data-fancybox="gallery" data-caption="笑一个">
-                    <img src="babyimage/3.jpg" alt="宝宝照片">
-                </a>
-            </div>
-
-             <!-- 图片 4 -->
-             <div class="gallery-item">
-                <a href="babyimage/4.jpg" data-fancybox="gallery">
-                    <img src="babyimage/4.jpg" alt="宝宝照片">
-                </a>
-            </div>
-
-             <!-- 图片 5 -->
-             <div class="gallery-item">
-                <a href="babyimage/5.jpg" data-fancybox="gallery">
-                    <img src="babyimage/5.jpg" alt="宝宝照片">
-                </a>
-            </div>
-
-             <!-- 图片 6 -->
-             <div class="gallery-item">
-                <a href="babyimage/6.jpg" data-fancybox="gallery">
-                    <img src="babyimage/6.jpg" alt="宝宝照片">
-                </a>
-            </div>
-        </div>
-        
-        <!-- 动态加载区域：服务器上的新照片 -->
-        <div class="section-title" id="newUploadsTitle" style="display:none; margin-top:40px;">🆕 亲友上传的祝福</div>
-        <div class="gallery-grid" id="serverGallery">
-            <!-- JS 会自动在这里插入图片 -->
+        <div class="gallery-grid" id="imageContainer">
+            <!-- JS 动态插入 -->
         </div>
 
-        <!-- 隐藏彩蛋触发区2：点击底部文字5次 -->
         <div class="end-text" id="secretFooter">- 持续更新中 -</div>
     </div>
 
-    <!-- 引入 Fancybox JS -->
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
     <script>
-        // 初始化灯箱效果
-        Fancybox.bind("[data-fancybox]", {
-            Toolbar: {
-                display: {
-                    left: ["infobar"],
-                    middle: [],
-                    right: ["close"],
-                },
-            },
-        });
+        Fancybox.bind("[data-fancybox]", {});
 
-        // ------------------------------
-        // 隐藏上传功能彩蛋逻辑
-        // ------------------------------
+        // --- 配置 ---
+        // 记得把 upload.php 重命名为 api.php
+        const API_URL = "https://upload.1101020.xyz/api.php"; 
         
-        // 你的后端上传接口地址 (请修改为你实际部署 PHP 的地址)
-        const UPLOAD_API_URL = "https://upload.1101020.xyz/upload.php"; 
+        let isAdmin = false; // 是否开启管理员模式
 
+        // --- 初始化加载 ---
+        function loadData() {
+            fetch(API_URL + "?action=list")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderGrid('videoContainer', data.videos);
+                    renderGrid('imageContainer', data.images);
+                }
+            });
+        }
+
+        // --- 渲染函数 ---
+        function renderGrid(containerId, items) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const isVideo = item.type === 'video';
+                const div = document.createElement('div');
+                div.className = 'media-card';
+                
+                // 是否置顶的角标
+                const pinBadge = item.is_pinned == 1 ? '<div class="pinned-badge">★ 置顶</div>' : '';
+                
+                // 媒体内容
+                let mediaHtml = '';
+                if (isVideo) {
+                    mediaHtml = `
+                        <a href="${item.url}" data-fancybox="gallery">
+                            <img class="media-thumb" src="${item.url}#t=0.1" onerror="this.src='babyimage/video_cover.jpg'"> <!-- 视频截图 -->
+                            <span class="video-icon" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:2rem;pointer-events:none;">▶</span>
+                        </a>`;
+                } else {
+                    mediaHtml = `
+                        <a href="${item.url}" data-fancybox="gallery">
+                            <img class="media-thumb" src="${item.url}" loading="lazy">
+                        </a>`;
+                }
+
+                // 评论预览 (只显示最新一条)
+                let commentsHtml = '';
+                if (item.comments && item.comments.length > 0) {
+                    commentsHtml = `<div class="comment-preview"><div class="comment-item">💬 ${item.comments[0].content}</div></div>`;
+                }
+
+                div.innerHTML = `
+                    ${pinBadge}
+                    <button class="admin-pin-btn" onclick="togglePin(${item.id})">📌</button>
+                    ${mediaHtml}
+                    <div class="card-actions">
+                        <button class="action-btn" onclick="likeItem(${item.id}, this)">
+                            <span class="heart-icon">${item.likes > 0 ? '❤️' : '🤍'}</span> 
+                            <span class="count">${item.likes || '赞'}</span>
+                        </button>
+                        <button class="action-btn" onclick="commentItem(${item.id})">
+                            💬 评论
+                        </button>
+                    </div>
+                    ${commentsHtml}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- 交互功能 ---
+
+        // 点赞
+        window.likeItem = function(id, btn) {
+            // 简单的防刷：检查 localStorage
+            if (localStorage.getItem('liked_' + id)) {
+                alert('您已经点过赞啦！');
+                return;
+            }
+
+            fetch(API_URL + "?action=like", {
+                method: 'POST',
+                body: JSON.stringify({ id: id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('liked_' + id, '1');
+                    const icon = btn.querySelector('.heart-icon');
+                    const count = btn.querySelector('.count');
+                    icon.innerText = '❤️';
+                    // 简单的数字+1动画效果
+                    let num = parseInt(count.innerText) || 0;
+                    count.innerText = num + 1;
+                    btn.classList.add('liked');
+                }
+            });
+        };
+
+        // 评论
+        window.commentItem = function(id) {
+            const content = prompt("请输入您的祝福或评论：");
+            if (!content) return;
+
+            fetch(API_URL + "?action=comment", {
+                method: 'POST',
+                body: JSON.stringify({ id: id, content: content })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('评论成功！');
+                    loadData(); // 刷新列表
+                }
+            });
+        };
+
+        // 置顶 (管理员功能)
+        window.togglePin = function(id) {
+            const password = prompt("请输入管理员密码以确认操作："); // 这里简单点，每次都验证，或者你可以存全局变量
+            if (!password) return;
+
+            fetch(API_URL + "?action=pin", {
+                method: 'POST',
+                body: JSON.stringify({ id: id, password: password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('置顶状态已更新');
+                    loadData();
+                } else {
+                    alert(data.message);
+                }
+            });
+        };
+
+        // --- 隐藏彩蛋 & 管理员模式 ---
         let clickCount = 0;
         let clickTimer = null;
         
-        // 创建一个隐藏的文件输入框
+        // 上传功能相关
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.accept = 'image/*,video/*'; // 允许图片和视频
+        fileInput.accept = 'image/*,video/*';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
-
-        // 监听文件选择
-        fileInput.addEventListener('change', function(e) {
+        
+        fileInput.onchange = function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const formData = new FormData();
             formData.append('file', file);
-
-            // 显示简单的加载状态
-            const originalText = document.getElementById('secretTitle').innerText;
-            document.getElementById('secretTitle').innerText = "⏳ 正在上传...";
-
-            fetch(UPLOAD_API_URL, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
+            
+            document.getElementById('secretTitle').innerText = "⏳ 上传中...";
+            fetch(API_URL + "?action=upload", { method: 'POST', body: formData })
+            .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    alert("✅ 上传成功！\n\n照片已上传到服务器，刷新页面即可在底部看到！");
-                    // 上传成功后，重新加载列表
-                    loadServerFiles();
-                } else {
-                    alert("❌ 上传失败：" + (data.message || "未知错误"));
-                }
+                if(data.success) { alert('上传成功！'); loadData(); }
+                else { alert('失败'); }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("❌ 上传出错，请检查网络或联系严先生");
-            })
-            .finally(() => {
-                document.getElementById('secretTitle').innerText = originalText;
-                fileInput.value = ''; // 清空
-            });
-        });
+            .finally(() => document.getElementById('secretTitle').innerText = "👶 屹琛成长记录");
+        };
 
         function checkSecretTrigger() {
             clickCount++;
-            
-            // 如果1秒内没有继续点击，重置计数
             if (clickTimer) clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => {
-                clickCount = 0;
-            }, 1000);
+            clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
 
-            // 连续点击 5 次触发
             if (clickCount >= 5) {
-                const isUpload = confirm("🎉 发现隐藏功能！\n\n您想要直接上传宝宝的照片或视频到服务器吗？");
-                if (isUpload) {
-                    fileInput.click(); // 触发文件选择
+                const action = prompt("🎉 彩蛋触发！\n\n1. 上传照片/视频\n2. 开启管理员模式(置顶功能)\n请输入数字：");
+                if (action == '1') {
+                    fileInput.click();
+                } else if (action == '2') {
+                    const pwd = prompt("请输入管理员密码：");
+                    // 这里只是前端简单的显示隐藏UI，真正的权限在后端验证
+                    // 为了演示方便，假设密码是 123 (虽然这不安全，真正校验在后端接口)
+                    if (pwd === '123') { 
+                        document.body.classList.add('admin-mode');
+                        alert("管理员模式已开启！现在点击图片右上角的📌可以置顶。");
+                    }
                 }
-                clickCount = 0; // 重置
+                clickCount = 0;
             }
         }
 
-        // 绑定点击事件到标题和页脚
         document.getElementById('secretTitle').addEventListener('click', checkSecretTrigger);
         document.getElementById('secretFooter').addEventListener('click', checkSecretTrigger);
 
-        // ------------------------------
-        // 自动加载服务器上的图片
-        // ------------------------------
-        function loadServerFiles() {
-            fetch(UPLOAD_API_URL, { method: 'GET' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.files && data.files.length > 0) {
-                    const container = document.getElementById('serverGallery');
-                    container.innerHTML = ''; // 清空
-                    document.getElementById('newUploadsTitle').style.display = 'block';
-
-                    data.files.forEach(file => {
-                        const div = document.createElement('div');
-                        div.className = 'gallery-item';
-                        
-                        if (file.type === 'video') {
-                            // 视频
-                             div.innerHTML = `
-                                <a href="${file.url}" data-fancybox="gallery" data-caption="亲友上传的视频">
-                                    <img src="${file.url}#t=0.1" alt="视频封面" style="object-fit:cover; height:100%; width:100%;">
-                                    <span class="video-icon">▶</span>
-                                </a>
-                            `;
-                        } else {
-                            // 图片
-                            div.innerHTML = `
-                                <a href="${file.url}" data-fancybox="gallery" data-caption="亲友上传的照片">
-                                    <img src="${file.url}" alt="${file.name}" loading="lazy">
-                                </a>
-                            `;
-                        }
-                        container.appendChild(div);
-                    });
-                }
-            })
-            .catch(e => console.log("加载服务器图片失败", e));
-        }
-
-        // 页面加载完成后执行
-        window.addEventListener('DOMContentLoaded', loadServerFiles);
+        // 启动
+        loadData();
 
     </script>
 </body>
