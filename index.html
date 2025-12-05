@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>严屹琛百日&乔迁之喜邀请函</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入动画库和字体 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- 音乐播放按钮 (可选) -->
+    <div class="music-btn" onclick="toggleMusic()">🎵</div>
+    <audio id="bgm" loop>
+        <source src="https://music.163.com/song/media/outer/url?id=1860587682.mp3" type="audio/mpeg"> 
+        <!-- 建议替换为自己喜欢的背景音乐链接 -->
+    </audio>
+
+    <div class="container">
+        
+        <!-- 第一屏：封面 -->
+        <section class="page cover">
+            <div class="animate__animated animate__fadeInDown title-group">
+                <div class="sub-title">双喜临门</div>
+                <h1 class="main-title">百日宴 & 乔迁宴</h1>
+            </div>
+            
+            <div class="photo-frame animate__animated animate__zoomIn animate__delay-1s">
+                <!-- 替换为宝宝或全家福照片 -->
+                <img src="https://via.placeholder.com/400x500/d32f2f/ffffff?text=BABY+PHOTO" alt="宝宝照片">
+            </div>
+
+            <div class="names animate__animated animate__fadeInUp animate__delay-2s">
+                <p>爱子：严屹琛</p>
+                <p>严蓬春 & 田梦 敬邀</p>
+            </div>
+
+            <div class="arrow-down">﹀</div>
+        </section>
+
+        <!-- 第二屏：诚挚邀请 -->
+        <section class="page intro">
+            <div class="card animate__animated animate__fadeInUp">
+                <h2>诚挚邀请</h2>
+                <div class="content">
+                    <p>新居落成，瑞气盈门</p>
+                    <p>爱子百日，喜气洋洋</p>
+                    <br>
+                    <p>在这个充满爱与希望的日子里</p>
+                    <p>我们备好薄酒佳肴</p>
+                    <p>诚邀您共同见证这份幸福</p>
+                    <p>分享我们双倍的喜悦</p>
+                </div>
+                <div class="photo-round">
+                     <!-- 替换为新房或生活照 -->
+                    <img src="https://via.placeholder.com/200x200/d32f2f/ffffff?text=HOME" alt="新居">
+                </div>
+            </div>
+        </section>
+
+        <!-- 第三屏：时间地点 -->
+        <section class="page info">
+            <div class="card animate__animated animate__fadeInUp">
+                <h2>活动详情</h2>
+                <div class="info-item">
+                    <span class="icon">📅</span>
+                    <div class="text">
+                        <h3>2026年1月10日</h3>
+                        <p>农历十一月廿二</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="icon">📍</span>
+                    <div class="text">
+                        <h3>祁阳鑫利大酒店</h3>
+                        <p>四楼1号会议厅</p>
+                    </div>
+                </div>
+                
+                <!-- 这是一个跳转百度的地图链接，可以换成高德或具体的经纬度 -->
+                <a href="https://j.map.baidu.com/2e/v5f" target="_blank" class="map-btn">查看地图导航</a>
+            </div>
+            
+            <footer class="footer">
+                <p>期待您的光临</p>
+            </footer>
+        </section>
+
+    </div>
+
+    <script>
+        // 简单的滚动触发动画效果
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.classList.add('animate__fadeInUp');
+                }
+            });
+        });
+
+        document.querySelectorAll('.card').forEach((el) => {
+            el.style.opacity = 0;
+            observer.observe(el);
+        });
+
+        // 音乐控制
+        function toggleMusic() {
+            const audio = document.getElementById('bgm');
+            const btn = document.querySelector('.music-btn');
+            if (audio.paused) {
+                audio.play();
+                btn.style.animationPlayState = 'running';
+                btn.style.opacity = 1;
+            } else {
+                audio.pause();
+                btn.style.animationPlayState = 'paused';
+                btn.style.opacity = 0.5;
+            }
+        }
+        
+        // 尝试自动播放(部分浏览器会拦截)
+        document.addEventListener('click', function() {
+            const audio = document.getElementById('bgm');
+            if(audio.paused) audio.play();
+        }, {once:true});
+    </script>
+</body>
+</html>

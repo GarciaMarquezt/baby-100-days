@@ -1,0 +1,190 @@
+:root {
+    --primary-color: #D32F2F; /* 中国红 */
+    --gold-color: #FFD700;    /* 金色 */
+    --bg-color: #FFF5F5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Ma Shan Zheng', cursive, "Microsoft YaHei", sans-serif;
+    background-color: var(--bg-color);
+    color: #333;
+    overflow-x: hidden;
+}
+
+.page {
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    text-align: center;
+}
+
+/* 封面样式 */
+.cover {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    background-image: url('https://www.transparenttextures.com/patterns/red-paper.png'); /* 纹理背景 */
+}
+
+.main-title {
+    font-size: 3.5rem;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 0px #fff;
+    margin-bottom: 20px;
+}
+
+.sub-title {
+    font-size: 1.5rem;
+    color: #555;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+}
+
+.photo-frame {
+    width: 260px;
+    height: 350px;
+    border: 5px solid #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    border-radius: 10px;
+    margin: 20px auto;
+    background: #fff;
+}
+
+.photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.names {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: var(--primary-color);
+}
+
+/* 卡片通用样式 */
+.card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 40px 20px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.1);
+    border: 1px solid var(--gold-color);
+}
+
+.card h2 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    position: relative;
+    display: inline-block;
+}
+
+.card h2::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: var(--gold-color);
+    margin-top: 5px;
+}
+
+.content p {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 10px;
+}
+
+.photo-round {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 4px solid var(--gold-color);
+    margin: 30px auto 0;
+    overflow: hidden;
+}
+
+.photo-round img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 信息页样式 */
+.info-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.info-item .icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+.info-item h3 {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+}
+
+.map-btn {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 40px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+    transition: transform 0.2s;
+}
+
+.map-btn:active {
+    transform: scale(0.95);
+}
+
+/* 音乐按钮 */
+.music-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    cursor: pointer;
+    animation: rotate 3s linear infinite;
+    animation-play-state: paused;
+    opacity: 0.5;
+    border: 1px solid var(--primary-color);
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.arrow-down {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    color: var(--primary-color);
+    animation: bounce 2s infinite;
+}
