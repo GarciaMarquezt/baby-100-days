@@ -71,6 +71,44 @@ body {
     color: var(--primary-color);
 }
 
+/* 全局悬浮相册按钮 */
+.float-gallery-btn {
+    position: fixed;
+    bottom: 80px; /* 距离底部稍微高一点，避免挡住 copyright */
+    right: 20px;
+    background: linear-gradient(45deg, #ff758c 0%, #ff7eb3 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(255, 117, 140, 0.5);
+    z-index: 999; /* 确保在最上层 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid #fff;
+    animation: floatBounce 3s ease-in-out infinite;
+    transition: transform 0.2s;
+}
+
+.float-gallery-btn:active {
+    transform: scale(0.95);
+}
+
+.float-gallery-btn .icon {
+    font-size: 1.2rem;
+}
+
+.float-gallery-btn .text {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+@keyframes floatBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
 /* 卡片通用样式 */
 .card {
     background: rgba(255, 255, 255, 0.9);

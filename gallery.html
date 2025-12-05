@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宝宝成长相册 - 严屹琛</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入 Fancybox 用于图片点击放大 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
+    
+    <style>
+        body {
+            background-color: #fff5f5;
+            min-height: 100vh;
+            padding: 0;
+        }
+        .gallery-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 8px 15px;
+            background: #fff;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #d32f2f;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #d32f2f;
+            margin: 20px 0 10px;
+            border-left: 4px solid #d32f2f;
+            padding-left: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* 瀑布流/网格布局 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 两列显示 */
+            gap: 10px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            aspect-ratio: 1 / 1; /* 正方形缩略图 */
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+        
+        /* 视频播放图标 */
+        .video-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* 视频容器 */
+        .video-container {
+            margin-bottom: 30px;
+        }
+        .video-wrapper {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .video-wrapper video {
+            width: 100%;
+            display: block;
+        }
+        .video-caption {
+            padding: 10px;
+            background: #fff;
+            color: #666;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* 底部 */
+        .end-text {
+            text-align: center;
+            color: #999;
+            margin: 40px 0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="gallery-container">
+        <!-- 返回按钮 -->
+        <a href="index.html" class="back-btn">⬅ 返回邀请函</a>
+
+        <!-- 隐藏彩蛋触发区：点击标题5次 -->
+        <h1 id="secretTitle" style="text-align: center; color: #d32f2f; margin-bottom: 30px; cursor: pointer;">👶 屹琛成长记录</h1>
+
+        <!-- 视频区域 -->
+        <div class="section-title">🎥 精彩视频</div>
+        <div class="video-container">
+            <!-- 视频1 -->
+            <div class="video-wrapper">
+                <video controls poster="babyimage/video_cover.jpg">
+                    <source src="babyimage/video1.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放。
+                </video>
+                <div class="video-caption">第一次抬头</div>
+            </div>
+        </div>
+
+        <!-- 照片区域 -->
+        <div class="section-title">📸 精彩瞬间</div>
+        <div class="gallery-grid">
+            
+            <!-- 示例：普通照片 -->
+            <div class="gallery-item">
+                <a href="babyimage/1.jpg" data-fancybox="gallery" data-caption="可爱的宝宝">
+                    <img src="babyimage/1.jpg" alt="宝宝照片">
+                </a>
+            </div>
+
+            <!-- 示例：模拟实况照片 (Live Photo) -->
+            <!-- 将实况的mov文件作为href，jpg作为封面 -->
+            <div class="gallery-item">
+                <a href="babyimage/live1.mp4" data-fancybox="gallery" data-caption="实况：第一次笑 (Live Photo)">
+                    <img src="babyimage/live1.jpg" alt="实况照片封面">
+                    <span class="video-icon">▶</span>
+                </a>
+            </div>
+
+            <!-- 图片 2 -->
+            <div class="gallery-item">
+                <a href="babyimage/2.jpg" data-fancybox="gallery" data-caption="睡觉觉">
+                    <img src="babyimage/2.jpg" alt="宝宝照片">
+                </a>
+            </div>
+
+            <!-- 图片 3 -->
+            <div class="gallery-item">
+                <a href="babyimage/3.jpg" data-fancybox="gallery" data-caption="笑一个">
+                    <img src="babyimage/3.jpg" alt="宝宝照片">
+                </a>
+            </div>
+
+             <!-- 图片 4 -->
+             <div class="gallery-item">
+                <a href="babyimage/4.jpg" data-fancybox="gallery">
+                    <img src="babyimage/4.jpg" alt="宝宝照片">
+                </a>
+            </div>
+
+             <!-- 图片 5 -->
+             <div class="gallery-item">
+                <a href="babyimage/5.jpg" data-fancybox="gallery">
+                    <img src="babyimage/5.jpg" alt="宝宝照片">
+                </a>
+            </div>
+
+             <!-- 图片 6 -->
+             <div class="gallery-item">
+                <a href="babyimage/6.jpg" data-fancybox="gallery">
+                    <img src="babyimage/6.jpg" alt="宝宝照片">
+                </a>
+            </div>
+        </div>
+
+        <!-- 隐藏彩蛋触发区2：点击底部文字5次 -->
+        <div class="end-text" id="secretFooter">- 持续更新中 -</div>
+    </div>
+
+    <!-- 引入 Fancybox JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script>
+        // 初始化灯箱效果
+        Fancybox.bind("[data-fancybox]", {
+            Toolbar: {
+                display: {
+                    left: ["infobar"],
+                    middle: [],
+                    right: ["close"],
+                },
+            },
+        });
+
+        // ------------------------------
+        // 隐藏上传功能彩蛋逻辑
+        // ------------------------------
+        
+        // 你的后端上传接口地址 (请修改为你实际部署 PHP 的地址)
+        const UPLOAD_API_URL = "https://upload.1101020.xyz/upload.php"; 
+
+        let clickCount = 0;
+        let clickTimer = null;
+        
+        // 创建一个隐藏的文件输入框
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*,video/*'; // 允许图片和视频
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+
+        // 监听文件选择
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 显示简单的加载状态
+            const originalText = document.getElementById('secretTitle').innerText;
+            document.getElementById('secretTitle').innerText = "⏳ 正在上传...";
+
+            fetch(UPLOAD_API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("✅ 上传成功！谢谢您的分享！");
+                } else {
+                    alert("❌ 上传失败：" + (data.message || "未知错误"));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("❌ 上传出错，请检查网络或联系严先生");
+            })
+            .finally(() => {
+                document.getElementById('secretTitle').innerText = originalText;
+                fileInput.value = ''; // 清空
+            });
+        });
+
+        function checkSecretTrigger() {
+            clickCount++;
+            
+            // 如果1秒内没有继续点击，重置计数
+            if (clickTimer) clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 1000);
+
+            // 连续点击 5 次触发
+            if (clickCount >= 5) {
+                const isUpload = confirm("🎉 发现隐藏功能！\n\n您想要直接上传宝宝的照片或视频到服务器吗？");
+                if (isUpload) {
+                    fileInput.click(); // 触发文件选择
+                }
+                clickCount = 0; // 重置
+            }
+        }
+
+        // 绑定点击事件到标题和页脚
+        document.getElementById('secretTitle').addEventListener('click', checkSecretTrigger);
+        document.getElementById('secretFooter').addEventListener('click', checkSecretTrigger);
+
+    </script>
+</body>
+</html>

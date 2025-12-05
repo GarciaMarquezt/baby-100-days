@@ -8,6 +8,27 @@
     <!-- 引入动画库和字体 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <!-- 引入 Swiper 样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    
+    <style>
+        /* 轮播图额外样式，确保填满相框 */
+        .swiper {
+            width: 100%;
+            height: 100%;
+        }
+        .swiper-slide {
+            background-position: center;
+            background-size: cover;
+        }
+        .swiper-slide img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px; /* 保持圆角 */
+        }
+    </style>
 </head>
 <body>
 
@@ -27,9 +48,19 @@
                 <h1 class="main-title">百日宴 & 乔迁宴</h1>
             </div>
             
+            <!-- 相框容器 -->
             <div class="photo-frame animate__animated animate__zoomIn animate__delay-1s">
-                <!-- 替换为宝宝或全家福照片 -->
-                <img src="https://via.placeholder.com/400x500/d32f2f/ffffff?text=BABY+PHOTO" alt="宝宝照片">
+                <!-- Swiper 轮播结构 -->
+                <div class="swiper mySwiper">
+                    <div class="swiper-wrapper">
+                        <!-- 轮播展示精选的几张即可 -->
+                        <div class="swiper-slide"><img src="babyimage/1.jpg" alt="宝宝照片1"></div>
+                        <div class="swiper-slide"><img src="babyimage/2.jpg" alt="宝宝照片2"></div>
+                        <div class="swiper-slide"><img src="babyimage/3.jpg" alt="宝宝照片3"></div>
+                    </div>
+                    <!-- 如果需要分页器 -->
+                    <div class="swiper-pagination"></div>
+                </div>
             </div>
 
             <div class="names animate__animated animate__fadeInUp animate__delay-2s">
@@ -90,7 +121,31 @@
 
     </div>
 
+    <!-- 全局悬浮按钮：查看相册 -->
+    <a href="gallery.html" class="float-gallery-btn">
+        <span class="icon">👶</span>
+        <span class="text">查看成长相册</span>
+    </a>
+
+    <!-- 引入 Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <script>
+        // 初始化 Swiper 轮播
+        var swiper = new Swiper(".mySwiper", {
+            effect: "cards", // 特效：卡片叠加效果 (cards) | 立方体 (cube) | 淡入淡出 (fade) | 翻转 (flip)
+            grabCursor: true,
+            loop: true, // 循环播放
+            autoplay: {
+                delay: 2500, // 2.5秒切换一张
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                dynamicBullets: true,
+            },
+        });
+
         // 简单的滚动触发动画效果
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
