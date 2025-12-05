@@ -3,253 +3,494 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>宝宝成长相册 - 严屹琛</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- 引入 Fancybox -->
+    <title>屹琛 · 成长时光轴</title>
+    <!-- 引入字体和图标 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
     
     <style>
-        body { background-color: #fff5f5; min-height: 100vh; padding: 0; }
-        .gallery-container { padding: 20px; max-width: 800px; margin: 0 auto; }
-        .back-btn { display: inline-block; margin-bottom: 20px; padding: 8px 15px; background: #fff; border-radius: 20px; text-decoration: none; color: #d32f2f; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .section-title { color: #d32f2f; margin: 20px 0 10px; border-left: 4px solid #d32f2f; padding-left: 10px; font-size: 1.2rem; }
-        
-        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        
-        /* 新版卡片样式 */
-        .media-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
-        .media-thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
-        .pinned-badge { position: absolute; top: 5px; left: 5px; background: #ffd700; color: #d32f2f; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        
-        /* 交互栏 */
-        .card-actions { display: flex; justify-content: space-between; padding: 8px 10px; border-top: 1px solid #eee; align-items: center; }
-        .action-btn { border: none; background: none; cursor: pointer; font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 4px; }
-        .action-btn.liked { color: #d32f2f; }
-        
-        /* 评论区预览 */
-        .comment-preview { padding: 0 10px 10px; font-size: 0.8rem; color: #888; }
-        .comment-item { margin-top: 4px; background: #f9f9f9; padding: 4px; border-radius: 4px; }
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --primary: #ff4757;
+            --text-main: #2f3542;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
 
-        /* 管理员置顶按钮 (平时隐藏) */
-        .admin-pin-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; display: none; z-index: 3; }
-        .admin-mode .admin-pin-btn { display: block; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            background-attachment: fixed; /* 背景固定，产生视差感 */
+            min-height: 100vh;
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        .video-wrapper video { width: 100%; display: block; border-radius: 8px; }
+        /* 动态背景光晕 */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 10s infinite ease-in-out;
+        }
+        .orb-1 { width: 300px; height: 300px; background: #a18cd1; top: -50px; left: -50px; }
+        .orb-2 { width: 200px; height: 200px; background: #fbc2eb; bottom: 10%; right: -50px; animation-delay: -5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 50px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 15px 80px; /* 底部留空给加载更多 */
+        }
+
+        /* 顶部导航 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+        }
+        .back-btn {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        .page-title {
+            margin: 0;
+            font-size: 1.2rem;
+            background: linear-gradient(to right, #ff4757, #ff6b81);
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
+
+        /* 分类标题 */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin: 40px 0 20px;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #57606f;
+            font-weight: 600;
+        }
+        .section-header span {
+            margin-left: 10px;
+            font-size: 0.8rem;
+            color: #a4b0be;
+            font-weight: normal;
+        }
+
+        /* 瀑布流卡片网格 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(5px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            position: relative;
+            /* 入场动画 */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        /* 媒体展示区 */
+        .media-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 正方形 */
+            background: #f1f2f6;
+            overflow: hidden;
+        }
+        .media-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
         
-        .end-text { text-align: center; color: #999; margin: 40px 0; font-size: 0.8rem; cursor: pointer; user-select: none; }
+        /* 视频专属样式：默认封面 */
+        .video-placeholder {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .video-placeholder.has-thumb {
+            background: transparent; /* 有图就不显示背景色 */
+        }
+        .play-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            opacity: 0.9;
+        }
+
+        /* 卡片底部交互 */
+        .card-footer {
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #747d8c;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .btn-action.liked {
+            color: var(--primary);
+        }
+        .btn-action.liked .icon {
+            animation: pop 0.3s;
+        }
+        
+        @keyframes pop {
+            50% { transform: scale(1.4); }
+        }
+
+        /* 置顶角标 */
+        .badge-pin {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* 管理员按钮 */
+        .btn-admin-pin {
+            position: absolute;
+            top: 10px; right: 10px;
+            width: 30px; height: 30px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border-radius: 50%;
+            border: none;
+            z-index: 11;
+            display: none; /* 默认隐藏 */
+        }
+        .admin-mode .btn-admin-pin { display: block; }
+
+        /* 加载更多 */
+        .load-more-container {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .btn-load-more {
+            background: #fff;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.2);
+            cursor: pointer;
+        }
+        
+        /* 评论预览 */
+        .comment-preview {
+            padding: 0 12px 12px;
+            font-size: 0.8rem;
+            color: #a4b0be;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 彩蛋点击区 */
+        .easter-egg-area {
+            text-align: center;
+            padding: 20px;
+            color: #ced6e0;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div class="gallery-container">
-        <a href="index.html" class="back-btn">⬅ 返回邀请函</a>
-        <h1 id="secretTitle" style="text-align: center; color: #d32f2f; margin-bottom: 30px; cursor: pointer;">👶 屹琛成长记录</h1>
+    <!-- 动态背景 -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
 
-        <!-- 视频区域 (随机展示) -->
-        <div class="section-title">🎥 精彩视频 (随机播放)</div>
-        <div class="gallery-grid" id="videoContainer">
-            <!-- JS 动态插入 -->
+    <div class="container">
+        <!-- 顶部 -->
+        <header class="header">
+            <a href="index.html" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                返回
+            </a>
+            <h1 class="page-title" id="secretTitle">屹琛 · 成长时光轴</h1>
+            <div style="width: 50px;"></div> <!-- 占位，让标题居中 -->
+        </header>
+
+        <!-- 视频区 -->
+        <div class="section-header">
+            <h2>精彩视频</h2>
+            <span>随机播放 · 记录动态</span>
+        </div>
+        <div class="grid" id="videoGrid"></div>
+        
+        <!-- 加载更多视频按钮 (如果视频超过4个) -->
+        <div class="load-more-container" id="videoLoadMore" style="display:none;">
+            <button class="btn-load-more" onclick="showMoreVideos()">查看更多视频 ↓</button>
         </div>
 
-        <!-- 照片区域 -->
-        <div class="section-title">📸 精彩瞬间</div>
-        <div class="gallery-grid" id="imageContainer">
-            <!-- JS 动态插入 -->
+        <!-- 照片区 -->
+        <div class="section-header">
+            <h2>精彩瞬间</h2>
+            <span>定格美好 · 持续更新</span>
+        </div>
+        <div class="grid" id="imageGrid"></div>
+        
+        <!-- 加载更多图片按钮 -->
+        <div class="load-more-container" id="imageLoadMore" style="display:none;">
+            <button class="btn-load-more" onclick="showMoreImages()">查看更多照片 ↓</button>
         </div>
 
-        <div class="end-text" id="secretFooter">- 持续更新中 -</div>
+        <!-- 底部 -->
+        <div class="easter-egg-area" id="secretFooter">
+            - Design by Dad -
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
     <script>
-        Fancybox.bind("[data-fancybox]", {});
-
-        // --- 配置 ---
-        // 记得把 upload.php 重命名为 api.php
+        // 配置
         const API_URL = "https://upload.1101020.xyz/api.php"; 
         
-        let isAdmin = false; // 是否开启管理员模式
+        // 状态管理
+        let allVideos = [];
+        let allImages = [];
+        let videoPage = 1;
+        let imagePage = 1;
+        const PAGE_SIZE = 6; // 每次加载6个
 
-        // --- 初始化加载 ---
+        Fancybox.bind("[data-fancybox]", {});
+
+        // 初始化
+        loadData();
+
         function loadData() {
-            // 显示加载提示，方便调试
-            const title = document.getElementById('secretTitle');
-            const originalText = title.innerText;
-            title.innerText = "数据加载中...";
-
-            fetch(API_URL + "?action=list&t=" + new Date().getTime(), {
-                mode: 'cors', // 明确指定跨域模式
-                cache: 'no-store' // 禁用缓存
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error("HTTP status " + res.status);
-                }
-                return res.json();
-            })
+            // 防止缓存
+            fetch(API_URL + "?action=list&t=" + new Date().getTime(), { mode: 'cors', cache: 'no-store' })
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    renderGrid('videoContainer', data.videos);
-                    renderGrid('imageContainer', data.images);
+                    allVideos = data.videos;
+                    allImages = data.images;
+                    
+                    // 初次渲染
+                    renderBatch('videoGrid', allVideos, 1);
+                    renderBatch('imageGrid', allImages, 1);
+                    
+                    // 检查是否需要显示“加载更多”
+                    updateLoadMoreBtn();
                 } else {
-                    alert("数据加载失败：" + data.message);
+                    console.error("Server error:", data.message);
                 }
             })
             .catch(err => {
-                // ★ 这里会把手机上的错误弹出来 ★
-                alert("无法连接到服务器！\n可能原因：\n1. 域名DNS尚未生效(请过几小时再试)\n2. 证书问题\n\n错误信息：" + err.message);
-                console.error(err);
-            })
-            .finally(() => {
-                title.innerText = originalText;
+                // 静默失败，或者只在 console 报错，以免影响 UI 美观
+                console.log("Network error", err);
             });
         }
 
-        // --- 渲染函数 ---
-        function renderGrid(containerId, items) {
+        // 批量渲染函数 (实现伪分页)
+        function renderBatch(containerId, items, page) {
             const container = document.getElementById(containerId);
-            container.innerHTML = '';
+            // 如果是第一页，清空容器；否则追加
+            if (page === 1) container.innerHTML = '';
             
-            items.forEach(item => {
-                const isVideo = item.type === 'video';
+            const start = (page - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            const batch = items.slice(start, end);
+            
+            batch.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = 'media-card';
+                div.className = 'card';
+                // 动画延迟，产生阶梯效果
+                div.style.animationDelay = (index * 0.1) + 's';
                 
-                // 是否置顶的角标
-                const pinBadge = item.is_pinned == 1 ? '<div class="pinned-badge">★ 置顶</div>' : '';
+                const isPinned = item.is_pinned == 1 ? '<div class="badge-pin">★ 置顶</div>' : '';
                 
-                // 媒体内容
+                // 媒体HTML生成
                 let mediaHtml = '';
-                if (isVideo) {
+                if (item.type === 'video') {
+                    // 视频：使用漂亮的占位符 + 播放按钮
                     mediaHtml = `
-                        <a href="${item.url}" data-fancybox="gallery">
-                            <img class="media-thumb" src="${item.url}#t=0.1" onerror="this.src='babyimage/video_cover.jpg'"> <!-- 视频截图 -->
-                            <span class="video-icon" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:2rem;pointer-events:none;">▶</span>
+                        <a href="${item.url}" data-fancybox="gallery" class="media-box">
+                            <div class="video-placeholder ${item.has_thumb ? 'has-thumb' : ''}">
+                                <img src="${item.url}#t=0.1" style="opacity:${item.has_thumb?1:0.6};" onerror="this.style.display='none'">
+                                <div style="position:absolute; z-index:2;">
+                                    <span class="play-icon">▶</span>
+                                </div>
+                            </div>
                         </a>`;
                 } else {
+                    // 图片
                     mediaHtml = `
-                        <a href="${item.url}" data-fancybox="gallery">
-                            <img class="media-thumb" src="${item.url}" loading="lazy">
+                        <a href="${item.url}" data-fancybox="gallery" class="media-box">
+                            <img src="${item.url}" loading="lazy">
                         </a>`;
                 }
 
-                // 评论预览 (只显示最新一条)
-                let commentsHtml = '';
+                // 评论HTML
+                let commentHtml = '';
                 if (item.comments && item.comments.length > 0) {
-                    commentsHtml = `<div class="comment-preview"><div class="comment-item">💬 ${item.comments[0].content}</div></div>`;
+                    commentHtml = `<div class="comment-preview">"${item.comments[0].content}"</div>`;
                 }
 
                 div.innerHTML = `
-                    ${pinBadge}
-                    <button class="admin-pin-btn" onclick="togglePin(${item.id})">📌</button>
+                    ${isPinned}
+                    <button class="btn-admin-pin" onclick="togglePin(${item.id})">📌</button>
                     ${mediaHtml}
-                    <div class="card-actions">
-                        <button class="action-btn" onclick="likeItem(${item.id}, this)">
-                            <span class="heart-icon">${item.likes > 0 ? '❤️' : '🤍'}</span> 
-                            <span class="count">${item.likes || '赞'}</span>
+                    <div class="card-footer">
+                        <button class="btn-action ${localStorage.getItem('liked_'+item.id)?'liked':''}" onclick="likeItem(${item.id}, this)">
+                            <span class="icon">♥</span>
+                            <span class="count">${item.likes || 0}</span>
                         </button>
-                        <button class="action-btn" onclick="commentItem(${item.id})">
-                            💬 评论
+                        <button class="btn-action" onclick="commentItem(${item.id})">
+                            <span class="icon">💬</span> 评论
                         </button>
                     </div>
-                    ${commentsHtml}
+                    ${commentHtml}
                 `;
                 container.appendChild(div);
             });
         }
 
-        // --- 交互功能 ---
+        function showMoreVideos() {
+            videoPage++;
+            renderBatch('videoGrid', allVideos, videoPage);
+            updateLoadMoreBtn();
+        }
 
-        // 点赞
+        function showMoreImages() {
+            imagePage++;
+            renderBatch('imageGrid', allImages, imagePage);
+            updateLoadMoreBtn();
+        }
+
+        function updateLoadMoreBtn() {
+            const vBtn = document.getElementById('videoLoadMore');
+            const iBtn = document.getElementById('imageLoadMore');
+            
+            if (videoPage * PAGE_SIZE < allVideos.length) vBtn.style.display = 'block';
+            else vBtn.style.display = 'none';
+
+            if (imagePage * PAGE_SIZE < allImages.length) iBtn.style.display = 'block';
+            else iBtn.style.display = 'none';
+        }
+
+        // --- 交互逻辑 (和之前一样) ---
         window.likeItem = function(id, btn) {
-            // 简单的防刷：检查 localStorage
-            if (localStorage.getItem('liked_' + id)) {
-                alert('您已经点过赞啦！');
-                return;
-            }
-
-            fetch(API_URL + "?action=like", {
-                method: 'POST',
-                body: JSON.stringify({ id: id })
-            })
+            if (localStorage.getItem('liked_' + id)) return;
+            fetch(API_URL + "?action=like", { method: 'POST', body: JSON.stringify({ id: id }) })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     localStorage.setItem('liked_' + id, '1');
-                    const icon = btn.querySelector('.heart-icon');
-                    const count = btn.querySelector('.count');
-                    icon.innerText = '❤️';
-                    // 简单的数字+1动画效果
-                    let num = parseInt(count.innerText) || 0;
-                    count.innerText = num + 1;
                     btn.classList.add('liked');
+                    const countSpan = btn.querySelector('.count');
+                    countSpan.innerText = parseInt(countSpan.innerText) + 1;
                 }
             });
         };
 
-        // 评论
         window.commentItem = function(id) {
-            const content = prompt("请输入您的祝福或评论：");
+            const content = prompt("写下您的祝福：");
             if (!content) return;
-
-            fetch(API_URL + "?action=comment", {
-                method: 'POST',
-                body: JSON.stringify({ id: id, content: content })
-            })
+            fetch(API_URL + "?action=comment", { method: 'POST', body: JSON.stringify({ id: id, content: content }) })
             .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('评论成功！');
-                    loadData(); // 刷新列表
-                }
+            .then(data => { 
+                if(data.success) { alert('评论成功'); loadData(); } 
             });
         };
 
-        // 置顶 (管理员功能)
         window.togglePin = function(id) {
-            const password = prompt("请输入管理员密码以确认操作："); // 这里简单点，每次都验证，或者你可以存全局变量
-            if (!password) return;
-
-            fetch(API_URL + "?action=pin", {
-                method: 'POST',
-                body: JSON.stringify({ id: id, password: password })
-            })
+            const pwd = prompt("管理密码：");
+            if(!pwd) return;
+            fetch(API_URL + "?action=pin", { method: 'POST', body: JSON.stringify({ id: id, password: pwd }) })
             .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('置顶状态已更新');
-                    loadData();
-                } else {
-                    alert(data.message);
-                }
-            });
+            .then(data => { alert(data.message || '操作成功'); loadData(); });
         };
 
-        // --- 隐藏彩蛋 & 管理员模式 ---
+        // --- 彩蛋逻辑 (上传 & 管理员) ---
         let clickCount = 0;
         let clickTimer = null;
         
-        // 上传功能相关
+        // 上传控件
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*,video/*';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
-        
         fileInput.onchange = function(e) {
             const file = e.target.files[0];
-            if (!file) return;
+            if(!file) return;
             const formData = new FormData();
             formData.append('file', file);
-            
-            document.getElementById('secretTitle').innerText = "⏳ 上传中...";
+            document.getElementById('secretTitle').innerText = "上传中...";
             fetch(API_URL + "?action=upload", { method: 'POST', body: formData })
             .then(res => res.json())
-            .then(data => {
-                if(data.success) { alert('上传成功！'); loadData(); }
-                else { alert('失败'); }
-            })
-            .finally(() => document.getElementById('secretTitle').innerText = "👶 屹琛成长记录");
+            .then(data => { alert('上传成功'); loadData(); })
+            .finally(() => document.getElementById('secretTitle').innerText = "屹琛 · 成长时光轴");
         };
 
         function checkSecretTrigger() {
@@ -258,27 +499,20 @@
             clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
 
             if (clickCount >= 5) {
-                const action = prompt("🎉 彩蛋触发！\n\n1. 上传照片/视频\n2. 开启管理员模式(置顶功能)\n请输入数字：");
-                if (action == '1') {
-                    fileInput.click();
-                } else if (action == '2') {
-                    const pwd = prompt("请输入管理员密码：");
-                    // 这里只是前端简单的显示隐藏UI，真正的权限在后端验证
-                    // 为了演示方便，假设密码是 123 (虽然这不安全，真正校验在后端接口)
-                    if (pwd === '123') { 
+                const action = prompt("功能菜单\n1. 上传文件\n2. 开启管理员模式");
+                if (action == '1') fileInput.click();
+                else if (action == '2') {
+                    if(prompt("密码") === '123') {
                         document.body.classList.add('admin-mode');
-                        alert("管理员模式已开启！现在点击图片右上角的📌可以置顶。");
+                        alert("已开启管理员模式");
                     }
                 }
                 clickCount = 0;
             }
         }
-
+        
         document.getElementById('secretTitle').addEventListener('click', checkSecretTrigger);
         document.getElementById('secretFooter').addEventListener('click', checkSecretTrigger);
-
-        // 启动
-        loadData();
 
     </script>
 </body>
