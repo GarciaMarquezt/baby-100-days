@@ -72,13 +72,33 @@
 
         // --- 初始化加载 ---
         function loadData() {
+            // 显示加载提示，方便调试
+            const title = document.getElementById('secretTitle');
+            const originalText = title.innerText;
+            title.innerText = "数据加载中...";
+
             fetch(API_URL + "?action=list")
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("HTTP status " + res.status);
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.success) {
                     renderGrid('videoContainer', data.videos);
                     renderGrid('imageContainer', data.images);
+                } else {
+                    alert("数据加载失败：" + data.message);
                 }
+            })
+            .catch(err => {
+                // ★ 这里会把手机上的错误弹出来 ★
+                alert("无法连接到服务器！\n可能原因：\n1. 域名DNS尚未生效(请过几小时再试)\n2. 证书问题\n\n错误信息：" + err.message);
+                console.error(err);
+            })
+            .finally(() => {
+                title.innerText = originalText;
             });
         }
 
