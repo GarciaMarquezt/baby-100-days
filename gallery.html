@@ -186,6 +186,12 @@
                 </a>
             </div>
         </div>
+        
+        <!-- 动态加载区域：服务器上的新照片 -->
+        <div class="section-title" id="newUploadsTitle" style="display:none; margin-top:40px;">🆕 亲友上传的祝福</div>
+        <div class="gallery-grid" id="serverGallery">
+            <!-- JS 会自动在这里插入图片 -->
+        </div>
 
         <!-- 隐藏彩蛋触发区2：点击底部文字5次 -->
         <div class="end-text" id="secretFooter">- 持续更新中 -</div>
@@ -241,7 +247,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("✅ 上传成功！谢谢您的分享！");
+                    alert("✅ 上传成功！\n\n照片已上传到服务器，刷新页面即可在底部看到！");
+                    // 上传成功后，重新加载列表
+                    loadServerFiles();
                 } else {
                     alert("❌ 上传失败：" + (data.message || "未知错误"));
                 }
@@ -278,6 +286,48 @@
         // 绑定点击事件到标题和页脚
         document.getElementById('secretTitle').addEventListener('click', checkSecretTrigger);
         document.getElementById('secretFooter').addEventListener('click', checkSecretTrigger);
+
+        // ------------------------------
+        // 自动加载服务器上的图片
+        // ------------------------------
+        function loadServerFiles() {
+            fetch(UPLOAD_API_URL, { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.files && data.files.length > 0) {
+                    const container = document.getElementById('serverGallery');
+                    container.innerHTML = ''; // 清空
+                    document.getElementById('newUploadsTitle').style.display = 'block';
+
+                    data.files.forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'gallery-item';
+                        
+                        if (file.type === 'video') {
+                            // 视频
+                             div.innerHTML = `
+                                <a href="${file.url}" data-fancybox="gallery" data-caption="亲友上传的视频">
+                                    <img src="${file.url}#t=0.1" alt="视频封面" style="object-fit:cover; height:100%; width:100%;">
+                                    <span class="video-icon">▶</span>
+                                </a>
+                            `;
+                        } else {
+                            // 图片
+                            div.innerHTML = `
+                                <a href="${file.url}" data-fancybox="gallery" data-caption="亲友上传的照片">
+                                    <img src="${file.url}" alt="${file.name}" loading="lazy">
+                                </a>
+                            `;
+                        }
+                        container.appendChild(div);
+                    });
+                }
+            })
+            .catch(e => console.log("加载服务器图片失败", e));
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', loadServerFiles);
 
     </script>
 </body>
