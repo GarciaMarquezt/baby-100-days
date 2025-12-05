@@ -3,184 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>严屹琛百日&乔迁之喜邀请函</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- 引入动画库和字体 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-    <!-- 引入 Swiper 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <title>邀请函 | 严屹琛百日&乔迁喜宴</title>
     
+    <!-- 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;700&display=swap" rel="stylesheet">
+    <!-- 动画库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="style.css">
+
     <style>
-        /* 轮播图额外样式，确保填满相框 */
-        .swiper {
-            width: 100%;
-            height: 100%;
+        /* 内联关键样式，防止加载闪烁 */
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff0f5; z-index: 9999; display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.5s;
         }
-        .swiper-slide {
-            background-position: center;
-            background-size: cover;
+        .loading-circle {
+            width: 50px; height: 50px; border: 3px solid #ff9a9e; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;
         }
-        .swiper-slide img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px; /* 保持圆角 */
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- 音乐播放按钮 (可选) -->
-    <div class="music-btn" onclick="toggleMusic()">🎵</div>
-    <audio id="bgm" loop>
-        <source src="https://music.163.com/song/media/outer/url?id=1860587682.mp3" type="audio/mpeg"> 
-        <!-- 建议替换为自己喜欢的背景音乐链接 -->
-    </audio>
+    <!-- 加载屏 -->
+    <div id="loading"><div class="loading-circle"></div></div>
 
-    <div class="container">
+    <!-- 音乐控制 -->
+    <div class="music-control" id="musicBtn">
+        <div class="bar-1"></div><div class="bar-2"></div><div class="bar-3"></div>
+    </div>
+    <audio id="bgm" loop src="https://music.163.com/song/media/outer/url?id=1860587682.mp3"></audio>
+
+    <!-- 动态背景画布 -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- 主要内容 -->
+    <main class="scroll-container">
         
-        <!-- 第一屏：封面 -->
-        <section class="page cover">
-            <div class="animate__animated animate__fadeInDown title-group">
-                <div class="sub-title">双喜临门</div>
-                <h1 class="main-title">百日宴 & 乔迁宴</h1>
-            </div>
+        <!-- 第一屏：视觉冲击 -->
+        <section class="hero-section">
+            <div class="hero-bg" data-rellax-speed="-4"></div>
             
-            <!-- 相框容器 -->
-            <div class="photo-frame animate__animated animate__zoomIn animate__delay-1s">
-                <!-- Swiper 轮播结构 -->
-                <div class="swiper mySwiper">
-                    <div class="swiper-wrapper">
-                        <!-- 轮播展示精选的几张即可 -->
-                        <div class="swiper-slide"><img src="babyimage/1.jpg" alt="宝宝照片1"></div>
-                        <div class="swiper-slide"><img src="babyimage/2.jpg" alt="宝宝照片2"></div>
-                        <div class="swiper-slide"><img src="babyimage/3.jpg" alt="宝宝照片3"></div>
-                    </div>
-                    <!-- 如果需要分页器 -->
-                    <div class="swiper-pagination"></div>
-                </div>
-            </div>
-
-            <div class="names animate__animated animate__fadeInUp animate__delay-2s">
-                <p>爱子：严屹琛</p>
-                <p>严蓬春 & 田梦 敬邀</p>
-            </div>
-
-            <div class="arrow-down">﹀</div>
-        </section>
-
-        <!-- 第二屏：诚挚邀请 -->
-        <section class="page intro">
-            <div class="card animate__animated animate__fadeInUp">
-                <h2>诚挚邀请</h2>
-                <div class="content">
-                    <p>新居落成，瑞气盈门</p>
-                    <p>爱子百日，喜气洋洋</p>
-                    <br>
-                    <p>在这个充满爱与希望的日子里</p>
-                    <p>我们备好薄酒佳肴</p>
-                    <p>诚邀您共同见证这份幸福</p>
-                    <p>分享我们双倍的喜悦</p>
-                </div>
-                <div class="photo-round">
-                     <!-- 替换为新房或生活照 -->
-                    <img src="https://via.placeholder.com/200x200/d32f2f/ffffff?text=HOME" alt="新居">
-                </div>
-            </div>
-        </section>
-
-        <!-- 第三屏：时间地点 -->
-        <section class="page info">
-            <div class="card animate__animated animate__fadeInUp">
-                <h2>活动详情</h2>
-                <div class="info-item">
-                    <span class="icon">📅</span>
-                    <div class="text">
-                        <h3>2026年1月10日</h3>
-                        <p>农历十一月廿二</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <span class="icon">📍</span>
-                    <div class="text">
-                        <h3>祁阳鑫利大酒店</h3>
-                        <p>四楼1号会议厅</p>
-                    </div>
+            <div class="hero-content">
+                <div class="vertical-text date" data-aos="fade-down" data-aos-delay="300">
+                    <span>二</span><span>〇</span><span>二</span><span>六</span> · <span>一</span><span>月</span> · <span>十</span><span>日</span>
                 </div>
                 
-                <!-- 这是一个跳转百度的地图链接，可以换成高德或具体的经纬度 -->
-                <a href="https://j.map.baidu.com/2e/v5f" target="_blank" class="map-btn">查看地图导航</a>
+                <div class="main-visual" data-aos="zoom-out" data-aos-duration="1500">
+                    <div class="image-mask">
+                        <img src="babyimage/1.jpg" alt="Baby" class="hero-img">
+                    </div>
+                    <div class="floating-deco deco-1" data-rellax-speed="2"></div>
+                    <div class="floating-deco deco-2" data-rellax-speed="-1"></div>
+                </div>
+
+                <div class="title-block" data-aos="fade-up" data-aos-delay="500">
+                    <h2 class="sub">DOUBLE HAPPINESS</h2>
+                    <h1 class="main">百日 & 乔迁</h1>
+                    <p class="names">严屹琛 · 100 DAYS</p>
+                </div>
             </div>
             
-            <footer class="footer">
-                <p>期待您的光临</p>
-            </footer>
+            <div class="scroll-indicator">
+                <span>SCROLL</span>
+                <div class="line"></div>
+            </div>
         </section>
 
-    </div>
+        <!-- 第二屏：杂志风排版 -->
+        <section class="story-section">
+            <div class="story-grid">
+                <div class="text-box" data-aos="fade-right">
+                    <h3>家与爱<br>同时抵达</h3>
+                    <p>这是关于成长的第一百天<br>也是关于新家的第一天</p>
+                    <div class="divider"></div>
+                    <p class="small">
+                        瑞气盈门，喜迁新居<br>
+                        麟儿百日，福泽绵长<br>
+                        备薄酒，谢亲友<br>
+                        共叙温情时光
+                    </p>
+                </div>
+                <div class="img-box" data-aos="fade-left">
+                    <img src="babyimage/2.jpg" alt="Family" class="story-img">
+                    <div class="img-frame"></div>
+                </div>
+            </div>
+        </section>
 
-    <!-- 全局悬浮按钮：查看相册 -->
-    <a href="gallery.html" class="float-gallery-btn">
-        <span class="icon">👶</span>
-        <span class="text">查看成长相册</span>
+        <!-- 第三屏：3D邀请函 (时间地点) -->
+        <section class="invite-section">
+            <div class="card-3d-container" data-aos="flip-up" onclick="this.classList.toggle('flipped')">
+                <div class="card-3d">
+                    <!-- 正面 -->
+                    <div class="card-front">
+                        <div class="stamp">INVITATION</div>
+                        <h3>诚挚邀请</h3>
+                        <p class="host">严蓬春 & 田梦 敬邀</p>
+                        <div class="tap-hint">👆 点击翻转查看详情</div>
+                    </div>
+                    <!-- 背面 -->
+                    <div class="card-back">
+                        <div class="info-row">
+                            <i class="icon">📅</i>
+                            <div>
+                                <strong>2026.01.10</strong>
+                                <span>农历十一月廿二 (周六)</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <i class="icon">📍</i>
+                            <div>
+                                <strong>祁阳鑫利大酒店</strong>
+                                <span>四楼 1号会议厅</span>
+                            </div>
+                        </div>
+                        <a href="https://j.map.baidu.com/2e/v5f" target="_blank" class="map-btn">开启导航</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部悬浮入口 -->
+        <div class="bottom-spacer"></div>
+    </main>
+
+    <!-- 全局悬浮按钮 -->
+    <a href="gallery.html" class="floating-album-btn">
+        <div class="btn-content">
+            <span class="icon">👶</span>
+            <span class="text">成长相册</span>
+        </div>
+        <div class="btn-ripple"></div>
     </a>
 
-    <!-- 引入 Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
+    <!-- 脚本库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
     <script>
-        // 初始化 Swiper 轮播
-        var swiper = new Swiper(".mySwiper", {
-            effect: "cards", // 特效：卡片叠加效果 (cards) | 立方体 (cube) | 淡入淡出 (fade) | 翻转 (flip)
-            grabCursor: true,
-            loop: true, // 循环播放
-            autoplay: {
-                delay: 2500, // 2.5秒切换一张
-                disableOnInteraction: false,
-            },
-            pagination: {
-                el: ".swiper-pagination",
-                dynamicBullets: true,
-            },
-        });
-
-        // 简单的滚动触发动画效果
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = 1;
-                    entry.target.classList.add('animate__fadeInUp');
-                }
-            });
-        });
-
-        document.querySelectorAll('.card').forEach((el) => {
-            el.style.opacity = 0;
-            observer.observe(el);
-        });
+        // 页面加载
+        window.onload = function() {
+            document.getElementById('loading').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                // 初始化视差
+                var rellax = new Rellax('.floating-deco, .hero-bg');
+                // 初始化动画
+                AOS.init({
+                    offset: 50,
+                    duration: 1000,
+                    once: false,
+                    mirror: true
+                });
+            }, 500);
+        };
 
         // 音乐控制
-        function toggleMusic() {
-            const audio = document.getElementById('bgm');
-            const btn = document.querySelector('.music-btn');
-            if (audio.paused) {
-                audio.play();
-                btn.style.animationPlayState = 'running';
-                btn.style.opacity = 1;
+        const bgm = document.getElementById('bgm');
+        const musicBtn = document.getElementById('musicBtn');
+        let isPlaying = false;
+
+        document.body.addEventListener('click', () => {
+            if(!isPlaying) {
+                bgm.play();
+                musicBtn.classList.add('playing');
+                isPlaying = true;
+            }
+        }, {once:true});
+
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(isPlaying) {
+                bgm.pause();
+                musicBtn.classList.remove('playing');
             } else {
-                audio.pause();
-                btn.style.animationPlayState = 'paused';
-                btn.style.opacity = 0.5;
+                bgm.play();
+                musicBtn.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // 简单粒子效果
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const particles = [];
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.color = `rgba(255, 182, 193, ${Math.random() * 0.5})`; // 粉色
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                if(this.y > canvas.height) this.y = 0;
+                if(this.x > canvas.width) this.x = 0;
+                if(this.x < 0) this.x = canvas.width;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
         
-        // 尝试自动播放(部分浏览器会拦截)
-        document.addEventListener('click', function() {
-            const audio = document.getElementById('bgm');
-            if(audio.paused) audio.play();
-        }, {once:true});
+        for(let i=0; i<50; i++) particles.push(new Particle());
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
     </script>
 </body>
 </html>

@@ -1,228 +1,170 @@
 :root {
-    --primary-color: #D32F2F; /* 中国红 */
-    --gold-color: #FFD700;    /* 金色 */
-    --bg-color: #FFF5F5;
+    --primary: #c0392b; /* 高级红 */
+    --text-dark: #2c3e50;
+    --text-light: #95a5a6;
+    --bg-gradient: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    font-family: 'Ma Shan Zheng', cursive, "Microsoft YaHei", sans-serif;
-    background-color: var(--bg-color);
-    color: #333;
+    font-family: 'Noto Serif SC', serif;
+    background: var(--bg-gradient);
+    color: var(--text-dark);
     overflow-x: hidden;
 }
 
-.page {
-    min-height: 100vh;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    text-align: center;
-}
-
-/* 封面样式 */
-.cover {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-    background-image: url('https://www.transparenttextures.com/patterns/red-paper.png'); /* 纹理背景 */
-}
-
-.main-title {
-    font-size: 3.5rem;
-    color: var(--primary-color);
-    text-shadow: 2px 2px 0px #fff;
-    margin-bottom: 20px;
-}
-
-.sub-title {
-    font-size: 1.5rem;
-    color: #555;
-    letter-spacing: 5px;
-    margin-bottom: 10px;
-}
-
-.photo-frame {
-    width: 260px;
-    height: 350px;
-    border: 5px solid #fff;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
-    border-radius: 10px;
-    margin: 20px auto;
-    background: #fff;
-}
-
-.photo-frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.names {
-    font-size: 1.2rem;
-    line-height: 1.8;
-    color: var(--primary-color);
-}
-
-/* 全局悬浮相册按钮 */
-.float-gallery-btn {
-    position: fixed;
-    bottom: 80px; /* 距离底部稍微高一点，避免挡住 copyright */
-    right: 20px;
-    background: linear-gradient(45deg, #ff758c 0%, #ff7eb3 100%);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 50px;
-    text-decoration: none;
-    box-shadow: 0 4px 15px rgba(255, 117, 140, 0.5);
-    z-index: 999; /* 确保在最上层 */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 2px solid #fff;
-    animation: floatBounce 3s ease-in-out infinite;
-    transition: transform 0.2s;
-}
-
-.float-gallery-btn:active {
-    transform: scale(0.95);
-}
-
-.float-gallery-btn .icon {
-    font-size: 1.2rem;
-}
-
-.float-gallery-btn .text {
-    font-size: 1rem;
-    font-weight: bold;
-}
-
-@keyframes floatBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-/* 卡片通用样式 */
-.card {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 40px 20px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.1);
-    border: 1px solid var(--gold-color);
-}
-
-.card h2 {
-    color: var(--primary-color);
-    margin-bottom: 30px;
-    position: relative;
-    display: inline-block;
-}
-
-.card h2::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 3px;
-    background: var(--gold-color);
-    margin-top: 5px;
-}
-
-.content p {
-    font-size: 1.2rem;
-    line-height: 1.8;
-    margin-bottom: 10px;
-}
-
-.photo-round {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 4px solid var(--gold-color);
-    margin: 30px auto 0;
-    overflow: hidden;
-}
-
-.photo-round img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* 信息页样式 */
-.info-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.info-item .icon {
-    font-size: 2.5rem;
-    margin-right: 15px;
-}
-
-.info-item h3 {
-    font-size: 1.4rem;
-    color: var(--primary-color);
-}
-
-.map-btn {
-    display: inline-block;
-    background: var(--primary-color);
-    color: white;
-    padding: 12px 40px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-size: 1.1rem;
-    margin-top: 20px;
-    box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
-    transition: transform 0.2s;
-}
-
-.map-btn:active {
-    transform: scale(0.95);
+#particleCanvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
 }
 
 /* 音乐按钮 */
-.music-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    background: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+.music-control {
+    position: fixed; top: 20px; right: 20px; z-index: 100;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; gap: 3px;
     cursor: pointer;
-    animation: rotate 3s linear infinite;
-    animation-play-state: paused;
-    opacity: 0.5;
-    border: 1px solid var(--primary-color);
+}
+.music-control div { width: 3px; background: var(--primary); border-radius: 2px; height: 10px; transition: 0.3s; }
+.music-control.playing .bar-1 { animation: dance 0.5s infinite alternate; }
+.music-control.playing .bar-2 { animation: dance 0.7s infinite alternate; }
+.music-control.playing .bar-3 { animation: dance 0.6s infinite alternate; }
+@keyframes dance { from { height: 5px; } to { height: 20px; } }
+
+/* 第一屏 Hero */
+.hero-section {
+    height: 100vh; position: relative; display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.hero-bg {
+    position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+    background: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.1; z-index: -1;
 }
 
-@keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.hero-content {
+    position: relative; z-index: 1; width: 100%; max-width: 600px; height: 80%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 
-.arrow-down {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    text-align: center;
-    color: var(--primary-color);
-    animation: bounce 2s infinite;
+/* 竖排日期 */
+.vertical-text {
+    position: absolute; top: 50px; right: 20px; writing-mode: vertical-rl;
+    font-family: 'Ma Shan Zheng', cursive; font-size: 1.2rem; color: var(--primary); letter-spacing: 5px;
+    border-right: 1px solid var(--primary); padding-right: 10px;
+}
+
+/* 主视觉图 */
+.main-visual {
+    position: relative; width: 260px; height: 380px; margin-bottom: 40px;
+}
+.image-mask {
+    width: 100%; height: 100%; border-radius: 150px 150px 0 0; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    position: relative; z-index: 2;
+}
+.hero-img { width: 100%; height: 100%; object-fit: cover; }
+
+.floating-deco {
+    position: absolute; border-radius: 50%; z-index: 1;
+}
+.deco-1 { width: 100px; height: 100px; background: #ffeaa7; top: -30px; left: -40px; opacity: 0.5; }
+.deco-2 { width: 80px; height: 80px; background: #ff7675; bottom: -20px; right: -30px; opacity: 0.3; }
+
+/* 标题块 */
+.title-block { text-align: center; position: relative; z-index: 3; }
+.sub { font-size: 0.8rem; letter-spacing: 5px; color: var(--text-light); margin-bottom: 5px; text-transform: uppercase; }
+.main { font-family: 'Ma Shan Zheng', cursive; font-size: 3.5rem; color: var(--primary); margin: 0; line-height: 1; }
+.names { margin-top: 10px; font-weight: bold; letter-spacing: 2px; font-size: 0.9rem; }
+
+.scroll-indicator {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    font-size: 0.7rem; color: var(--text-light); letter-spacing: 2px;
+}
+.scroll-indicator .line { width: 1px; height: 40px; background: var(--text-light); }
+
+/* 第二屏：杂志排版 */
+.story-section { padding: 80px 20px; background: #fff; }
+.story-grid {
+    max-width: 800px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center;
+}
+.text-box h3 { font-size: 2rem; font-weight: normal; line-height: 1.4; margin-bottom: 20px; }
+.divider { width: 50px; height: 2px; background: var(--primary); margin: 20px 0; }
+.small { font-size: 0.9rem; color: #7f8c8d; line-height: 1.8; }
+
+.img-box { position: relative; }
+.story-img { width: 100%; border-radius: 4px; position: relative; z-index: 2; box-shadow: 10px 10px 30px rgba(0,0,0,0.1); }
+.img-frame {
+    position: absolute; top: 20px; left: 20px; width: 100%; height: 100%;
+    border: 2px solid var(--primary); z-index: 1;
+}
+
+/* 第三屏：3D卡片 */
+.invite-section { padding: 60px 20px 120px; text-align: center; perspective: 1000px; }
+.card-3d-container {
+    width: 300px; height: 450px; margin: 0 auto; cursor: pointer;
+}
+.card-3d {
+    position: relative; width: 100%; height: 100%; text-align: center;
+    transition: transform 0.8s; transform-style: preserve-3d;
+    border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+.card-3d-container.flipped .card-3d { transform: rotateY(180deg); }
+
+.card-front, .card-back {
+    position: absolute; width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    border-radius: 15px; padding: 30px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #fff;
+    background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+}
+
+/* 正面 */
+.stamp {
+    border: 1px solid var(--primary); color: var(--primary); padding: 5px 15px;
+    letter-spacing: 3px; font-size: 0.8rem; margin-bottom: 30px;
+}
+.card-front h3 { font-size: 2.5rem; font-family: 'Ma Shan Zheng'; margin-bottom: 20px; }
+.host { color: #7f8c8d; margin-bottom: 50px; }
+.tap-hint { font-size: 0.8rem; color: #bdc3c7; animation: pulse 1.5s infinite; }
+
+/* 背面 */
+.card-back { transform: rotateY(180deg); background: #fff5f5; }
+.info-row { display: flex; align-items: flex-start; margin-bottom: 30px; text-align: left; width: 100%; }
+.info-row .icon { font-size: 1.5rem; margin-right: 15px; color: var(--primary); }
+.info-row strong { display: block; font-size: 1.1rem; margin-bottom: 5px; color: var(--text-dark); }
+.info-row span { font-size: 0.9rem; color: #7f8c8d; }
+.map-btn {
+    margin-top: 20px; display: inline-block; padding: 10px 30px;
+    background: var(--primary); color: #fff; text-decoration: none; border-radius: 25px;
+    font-size: 0.9rem; box-shadow: 0 5px 15px rgba(192, 57, 43, 0.3);
+}
+
+/* 悬浮按钮 */
+.floating-album-btn {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 99; text-decoration: none;
+}
+.btn-content {
+    background: #fff; color: var(--text-dark); padding: 12px 25px; border-radius: 30px;
+    display: flex; align-items: center; gap: 8px; font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05);
+}
+.btn-ripple {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 30px;
+    border: 1px solid var(--primary); animation: ripple 1.5s infinite; z-index: -1;
+}
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* 适配手机 */
+@media (max-width: 600px) {
+    .story-grid { grid-template-columns: 1fr; text-align: center; }
+    .text-box { margin-bottom: 40px; }
+    .vertical-text { top: 80px; right: 15px; font-size: 1rem; }
+    .main-visual { width: 220px; height: 320px; }
+    .main { font-size: 3rem; }
 }
