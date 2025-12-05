@@ -77,7 +77,10 @@
             const originalText = title.innerText;
             title.innerText = "数据加载中...";
 
-            fetch(API_URL + "?action=list")
+            fetch(API_URL + "?action=list&t=" + new Date().getTime(), {
+                mode: 'cors', // 明确指定跨域模式
+                cache: 'no-store' // 禁用缓存
+            })
             .then(res => {
                 if (!res.ok) {
                     throw new Error("HTTP status " + res.status);
