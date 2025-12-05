@@ -143,11 +143,13 @@
                 百度坐标 (BD-09): 111.883652, 26.585436 (需确认)
                 火星坐标 (GCJ-02, 高德/腾讯用): 需转换
             -->
-            <a href="baidumap://map/marker?location=26.585436,111.883652&title=祁阳鑫利大酒店&content=四楼1号会议厅&src=invitation" class="menu-item">
-                <span style="color:#d32f2f">百度地图</span> (App)
+            <!-- 使用百度官方 Web 接口，兼容微信拦截 -->
+            <a href="http://api.map.baidu.com/marker?location=26.585436,111.883652&title=祁阳鑫利大酒店&content=四楼1号会议厅&output=html&src=webapp.baidu.openAPIdemo" target="_blank" class="menu-item">
+                <span style="color:#d32f2f">百度地图</span> (通用)
             </a>
-            <a href="androidamap://viewMap?sourceApplication=invitation&poiname=祁阳鑫利大酒店&lat=26.5828&lon=111.8771&dev=0" class="menu-item">
-                <span style="color:#0091ff">高德地图</span> (App)
+            <!-- 使用高德官方 URI 链接，兼容性最好，能自动唤起 APP -->
+            <a href="https://uri.amap.com/marker?position=111.8771,26.5828&name=祁阳鑫利大酒店&src=invitation&coordinate=gaode&callnative=1" target="_blank" class="menu-item">
+                <span style="color:#0091ff">高德地图</span> (推荐)
             </a>
             <a href="https://apis.map.qq.com/uri/v1/marker?marker=coord:26.5828,111.8771;title:祁阳鑫利大酒店;addr:四楼1号会议厅" target="_blank" class="menu-item">
                 <span style="color:#00c853">腾讯/网页地图</span> (通用)
