@@ -83,7 +83,7 @@
                 <div class="hero-right">
                     <div class="main-visual" data-aos="zoom-in" data-aos-duration="1500">
                         <div class="image-mask">
-                            <img src="uploads/images/1.jpg" alt="Baby" class="hero-img" loading="eager" onerror="fixImagePath(this)">
+                            <img src="https://upload.1101020.xyz/uploads/images/1.jpg" alt="Baby" class="hero-img" loading="eager" onerror="fixImagePath(this)">
                         </div>
                         <div class="floating-deco deco-1" data-rellax-speed="2"></div>
                         <div class="floating-deco deco-2" data-rellax-speed="-1"></div>
@@ -118,7 +118,7 @@
                     </p>
                 </div>
                 <div class="img-box" data-aos="fade-left">
-                    <img src="uploads/images/2.jpg" alt="Family" class="story-img" loading="lazy" onerror="fixImagePath(this)">
+                    <img src="https://upload.1101020.xyz/uploads/images/2.jpg" alt="Family" class="story-img" loading="lazy" onerror="fixImagePath(this)">
                     <div class="img-frame"></div>
                 </div>
             </div>
@@ -133,7 +133,7 @@
                         <div class="stamp">INVITATION</div>
                         <h3>诚挚邀请</h3>
                         <p class="host">严蓬春 & 田梦 敬邀</p>
-                        <div class="tap-hint" onclick="flipCard()">👆 点击翻转查看详情</div>
+                        <div class="tap-hint" onclick="flipCard(event)">👆 点击翻转查看详情</div>
                     </div>
                     <!-- 背面 -->
                     <div class="card-back">
@@ -151,7 +151,7 @@
                                 <span>四楼 1号会议厅</span>
                             </div>
                         </div>
-                        <button onclick="showMapMenu()" class="map-btn">开启导航</button>
+                        <button onclick="event.stopPropagation(); showMapMenu();" class="map-btn">开启导航</button>
                     </div>
                 </div>
             </div>
@@ -204,10 +204,8 @@
             const originalSrc = img.getAttribute('data-original') || img.src || img.getAttribute('src');
             if (!originalSrc) return;
             
-            // 获取基础路径
-            const basePath = window.location.origin;
-            const currentPath = window.location.pathname;
-            const baseDir = currentPath.substring(0, currentPath.lastIndexOf('/')) || '';
+            // 图片服务器域名（宝塔服务器）
+            const IMAGE_SERVER = 'https://upload.1101020.xyz';
             
             // 将 babyimage 路径转换为 uploads/images 路径
             let convertedSrc = originalSrc;
@@ -215,20 +213,29 @@
                 convertedSrc = convertedSrc.replace(/babyimage\//g, 'uploads/images/');
             }
             
+            // 提取文件名
+            let filename = convertedSrc;
+            if (filename.includes('/')) {
+                filename = filename.split('/').pop();
+            }
+            // 移除查询参数
+            if (filename.includes('?')) {
+                filename = filename.split('?')[0];
+            }
+            
+            // 构建正确的完整路径（使用宝塔服务器域名）
+            const correctPath = IMAGE_SERVER + '/uploads/images/' + filename;
+            
             // 尝试多种路径格式（解决宝塔面板路径问题）
             const possiblePaths = [
-                convertedSrc,  // 转换后的路径
-                originalSrc,  // 原始路径
+                correctPath,  // 最优先：使用正确的服务器域名
+                IMAGE_SERVER + '/' + convertedSrc.replace(/^\.?\//, ''),  // 使用服务器域名 + 转换后的路径
+                convertedSrc.startsWith('http') ? convertedSrc.replace('www.1101020.xyz', 'upload.1101020.xyz') : convertedSrc,  // 修复域名
+                originalSrc.startsWith('http') ? originalSrc.replace('www.1101020.xyz', 'upload.1101020.xyz') : originalSrc,  // 修复原始路径的域名
                 './' + convertedSrc.replace(/^\.?\//, ''),  // 相对路径（转换后）
                 '/' + convertedSrc.replace(/^\.?\//, ''),  // 绝对路径（转换后）
-                baseDir + '/' + convertedSrc.replace(/^\.?\//, ''),  // 基于当前目录（转换后）
-                basePath + baseDir + '/' + convertedSrc.replace(/^\.?\//, ''),  // 完整路径（转换后）
-                './' + originalSrc.replace(/^\.?\//, ''),  // 相对路径（原始）
-                '/' + originalSrc.replace(/^\.?\//, ''),  // 绝对路径（原始）
-                baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 基于当前目录（原始）
-                basePath + baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 完整路径（原始）
-                originalSrc.replace(/^babyimage\//, './uploads/images/'),  // 修复相对路径
-                originalSrc.replace(/^\.\/babyimage\//, '/uploads/images/')  // 修复绝对路径
+                convertedSrc,  // 转换后的路径
+                originalSrc,  // 原始路径
             ];
             
             // 去重
@@ -263,7 +270,12 @@
         }
         
         // 3D卡片翻转函数
-        function flipCard() {
+        function flipCard(event) {
+            // 如果传入了事件对象，阻止冒泡
+            if (event) {
+                event.stopPropagation();
+            }
+            
             const container = document.getElementById('card3dContainer');
             if (container) {
                 container.classList.toggle('flipped');
@@ -295,13 +307,28 @@
             const cardContainer = document.getElementById('card3dContainer');
             if (cardContainer) {
                 cardContainer.addEventListener('click', function(e) {
-                    // 如果点击的是提示文字，不重复触发
-                    if (e.target.classList.contains('tap-hint')) {
+                    // 如果点击的是按钮、链接或其他交互元素，不触发翻转
+                    if (e.target.tagName === 'BUTTON' || 
+                        e.target.tagName === 'A' || 
+                        e.target.closest('button') || 
+                        e.target.closest('a') ||
+                        e.target.classList.contains('tap-hint')) {
                         return;
                     }
-                    flipCard();
+                    flipCard(e);
                 });
                 console.log('3D卡片点击事件已绑定');
+            }
+            
+            // 为卡片背面的所有按钮和链接添加事件阻止冒泡
+            const cardBack = document.querySelector('.card-back');
+            if (cardBack) {
+                const interactiveElements = cardBack.querySelectorAll('button, a, .map-btn');
+                interactiveElements.forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                });
             }
             
             document.getElementById('loading').style.opacity = '0';

@@ -74,6 +74,37 @@
             border-radius: 20px;
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow);
+            position: relative;
+        }
+        .header-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .header-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        .header-right {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+        }
+        /* 总点赞数显示 */
+        .total-likes {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: bold;
+            padding: 5px 12px;
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 15px;
+        }
+        .total-likes-icon {
+            font-size: 1.2rem;
         }
         .back-btn {
             text-decoration: none;
@@ -711,18 +742,23 @@
             pointer-events: none;
             font-size: 2rem;
             z-index: 10000;
-            animation: likeFloat 1.5s ease-out forwards;
+            animation: likeFloat 2s ease-out forwards;
+            will-change: transform, opacity;
         }
         @keyframes likeFloat {
             0% {
                 transform: translate(0, 0) scale(0) rotate(0deg);
                 opacity: 1;
             }
+            20% {
+                transform: translate(0, -10px) scale(1.2) rotate(90deg);
+                opacity: 1;
+            }
             50% {
                 opacity: 1;
             }
             100% {
-                transform: translate(var(--tx, 0), var(--ty, -100px)) scale(1.5) rotate(var(--rot, 360deg));
+                transform: translate(var(--tx, 0), var(--ty, -150px)) scale(1.5) rotate(var(--rot, 720deg));
                 opacity: 0;
             }
         }
@@ -746,6 +782,64 @@
             font-size: 0.8rem;
             cursor: pointer;
         }
+        
+        /* 评论轮播区域 */
+        .comments-carousel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            max-height: 120px;
+            overflow: hidden;
+        }
+        .comments-carousel-content {
+            display: flex;
+            gap: 20px;
+            animation: scrollComments 30s linear infinite;
+            white-space: nowrap;
+        }
+        .comment-carousel-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            min-width: 200px;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+        .comment-carousel-item .comment-author {
+            font-weight: bold;
+            opacity: 0.9;
+        }
+        .comment-carousel-item .comment-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        @keyframes scrollComments {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+        .comments-carousel-content:hover {
+            animation-play-state: paused;
+        }
+        /* 为评论轮播区域留出底部空间 */
+        .container {
+            padding-bottom: 140px;
+        }
     </style>
 </head>
 <body>
@@ -760,12 +854,21 @@
     <div class="container">
         <!-- 顶部 -->
         <header class="header">
-            <a href="index.html" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                返回
-            </a>
-            <h1 class="page-title" id="secretTitle">屹琛 · 成长时光轴</h1>
-            <div style="width: 50px;"></div> <!-- 占位，让标题居中 -->
+            <div class="header-left">
+                <a href="index.html" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    返回
+                </a>
+            </div>
+            <div class="header-center">
+                <h1 class="page-title" id="secretTitle">屹琛 · 成长时光轴</h1>
+            </div>
+            <div class="header-right">
+                <div class="total-likes" id="totalLikes">
+                    <span class="total-likes-icon">❤️</span>
+                    <span id="totalLikesCount">0</span>
+                </div>
+            </div>
         </header>
 
         <!-- 视频区 -->
@@ -797,12 +900,18 @@
             - Design by Dad -
         </div>
     </div>
+    
+    <!-- 评论轮播区域 -->
+    <div class="comments-carousel" id="commentsCarousel" style="display:none;">
+        <div class="comments-carousel-content" id="commentsCarouselContent">
+            <!-- 评论将动态插入这里 -->
+        </div>
+    </div>
 
     <!-- 右下角固定操作栏 -->
     <div class="fixed-action-bar" id="fixedActionBar" style="display:none;">
         <button class="action-btn like-btn" id="fixedLikeBtn" onclick="handleFixedLike()">
             <span>❤️</span>
-            <span class="action-count" id="likeCount">0</span>
         </button>
         <button class="action-btn comment-btn" id="fixedCommentBtn" onclick="handleFixedComment()">
             <span>💬</span>
@@ -968,32 +1077,48 @@
 
         // 图片加载错误处理函数
         function handleImageError(img, originalUrl) {
+            if (!img || !originalUrl) return;
+            
             console.warn('图片加载失败，尝试修复路径:', originalUrl);
             
-            // 尝试多种路径格式
-            const baseUrl = 'https://upload.1101020.xyz/';
+            // 提取文件名
+            let filename = originalUrl.split('/').pop();
+            if (filename.includes('?')) {
+                filename = filename.split('?')[0];
+            }
+            
+            // 尝试多种路径格式（优先使用完整URL）
             const possiblePaths = [
-                originalUrl,
-                baseUrl + 'uploads/' + originalUrl.split('/').pop(),
-                baseUrl + 'upload/' + originalUrl.split('/').pop(),
-                originalUrl.replace(/^https?:\/\/[^\/]+\//, baseUrl + 'uploads/'),
-                originalUrl.replace(/^https?:\/\/[^\/]+\/upload\//, baseUrl + 'uploads/')
+                IMAGES_BASE_PATH + filename, // 最优先：使用配置的基础路径
+                'https://upload.1101020.xyz/uploads/images/' + filename,
+                originalUrl.replace('www.1101020.xyz', 'upload.1101020.xyz'),
+                originalUrl.replace('/babyimage/', '/uploads/images/'),
+                originalUrl.replace('babyimage/', 'uploads/images/'),
+                './uploads/images/' + filename,
+                '/uploads/images/' + filename,
+                originalUrl // 最后尝试原始路径
             ];
+            
+            // 去重
+            const uniquePaths = [...new Set(possiblePaths)];
             
             let currentIndex = 0;
             const tryNextPath = () => {
-                if (currentIndex >= possiblePaths.length) {
-                    console.error('所有路径尝试失败，隐藏图片');
-                    img.style.display = 'none';
+                if (currentIndex >= uniquePaths.length) {
+                    console.error('所有路径尝试失败，使用占位图');
+                    // 不隐藏图片，而是显示占位图
+                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7lm77niYfliqDovb3lpLHotKU8L3RleHQ+PC9zdmc+';
+                    img.style.opacity = '0.5';
                     return;
                 }
                 
-                const testPath = possiblePaths[currentIndex];
+                const testPath = uniquePaths[currentIndex];
                 const testImg = new Image();
                 
                 testImg.onload = () => {
                     img.src = testPath;
                     img.onerror = null; // 成功后清除错误处理
+                    img.style.opacity = '1';
                     console.log('图片加载成功:', testPath);
                 };
                 
@@ -1002,6 +1127,7 @@
                     tryNextPath();
                 };
                 
+                // 添加时间戳防止缓存
                 testImg.src = testPath + (testPath.includes('?') ? '&' : '?') + 't=' + Date.now();
             };
             
@@ -1079,49 +1205,15 @@
             }
         }
         
-        // 初始化
-        loadData();
-        
-        // 页面加载完成后初始化粒子
-        window.addEventListener('load', function() {
-            setTimeout(initParticles, 500);
-        });
-        
-        // 点击页面其他地方隐藏固定栏
-        document.addEventListener('click', function(e) {
-            const actionBar = document.getElementById('fixedActionBar');
-            const modal = document.getElementById('commentModal');
-            const commentListModal = document.getElementById('commentListModal');
-            const card = e.target.closest('.card');
-            
-            // 如果点击的是卡片，显示固定栏
-            if (card && !e.target.closest('a')) {
-                const itemId = card.getAttribute('data-item-id');
-                const itemType = card.getAttribute('data-item-type');
-                if (itemId) {
-                    showFixedActionBar(itemId, itemType);
-                    return;
-                }
-            }
-            
-            // 如果点击的是固定栏、弹窗或评论列表，不隐藏
-            if (actionBar && actionBar.contains(e.target)) return;
-            if (modal && modal.contains(e.target)) return;
-            if (commentListModal && commentListModal.contains(e.target)) return;
-            if (e.target.closest('.fixed-action-bar')) return;
-            if (e.target.closest('.comment-modal')) return;
-            if (e.target.closest('.comment-list-modal')) return;
-            
-            // 其他情况隐藏固定栏
-            if (actionBar && actionBar.style.display !== 'none') {
-                hideFixedActionBar();
-            }
-        });
-
-        // 数据缓存（5分钟）
+        // 数据缓存（5分钟）- 必须在 loadData 之前声明
         let dataCache = null;
         let cacheTime = 0;
         const CACHE_DURATION = 5 * 60 * 1000; // 5分钟
+        
+        // 初始化 - 在 loadData 定义之后调用
+        function initPage() {
+            loadData();
+        }
         
         function loadData(forceRefresh = false) {
             // 检查缓存
@@ -1135,8 +1227,15 @@
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
             
-            fetch(API_URL + "?action=list&t=" + new Date().getTime(), { 
-                mode: 'cors', 
+            // 构建请求 URL
+            const requestUrl = API_URL === 'mock' 
+                ? 'mock?action=list&t=' + new Date().getTime()
+                : API_URL + "?action=list&t=" + new Date().getTime();
+            
+            console.log('📡 请求 URL:', requestUrl, 'API_URL:', API_URL);
+            
+            fetch(requestUrl, { 
+                mode: API_URL === 'mock' ? 'same-origin' : 'cors', 
                 cache: 'no-store',
                 signal: controller.signal
             })
@@ -1165,55 +1264,80 @@
         }
         
         function processData(data) {
-            if (data.success) {
-                    // 修复所有媒体文件的 URL 路径（根据类型）
-                    allVideos = (data.videos || []).map(item => {
-                        const fixedItem = {
-                            ...item,
-                            originalUrl: item.url, // 保存原始 URL 用于调试
-                            url: fixMediaUrl(item.url, 'video')
-                        };
-                        return fixedItem;
-                    });
-                    allImages = (data.images || []).map(item => {
-                        const fixedItem = {
-                            ...item,
-                            originalUrl: item.url, // 保存原始 URL 用于调试
-                            url: fixMediaUrl(item.url, 'image')
-                        };
-                        return fixedItem;
-                    });
-                    
-                    console.log('加载的视频:', allVideos.length, '个');
-                    console.log('加载的图片:', allImages.length, '个');
-                    
-                    // 如果没有数据，显示提示
-                    if (allVideos.length === 0 && allImages.length === 0) {
-                        console.warn('警告: API 返回了成功状态，但没有视频和图片数据');
-                        const videoGrid = document.getElementById('videoGrid');
-                        const imageGrid = document.getElementById('imageGrid');
-                        if (videoGrid && videoGrid.children.length === 0) {
-                            videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无视频</div>';
-                        }
-                        if (imageGrid && imageGrid.children.length === 0) {
-                            imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无图片</div>';
-                        }
+            console.log('processData 接收到的数据:', data);
+            if (data && data.success) {
+                // 修复所有媒体文件的 URL 路径（根据类型）
+                allVideos = (data.videos || []).map(item => {
+                    const fixedItem = {
+                        ...item,
+                        originalUrl: item.url, // 保存原始 URL 用于调试
+                        url: fixMediaUrl(item.url, 'video'),
+                        // 确保评论的时间戳是秒级
+                        comments: (item.comments || []).map(comment => ({
+                            ...comment,
+                            created_at: comment.created_at ? (comment.created_at > 10000000000 ? Math.floor(comment.created_at / 1000) : comment.created_at) : Math.floor(Date.now() / 1000)
+                        }))
+                    };
+                    return fixedItem;
+                });
+                allImages = (data.images || []).map(item => {
+                    const fixedItem = {
+                        ...item,
+                        originalUrl: item.url, // 保存原始 URL 用于调试
+                        url: fixMediaUrl(item.url, 'image'),
+                        // 确保评论的时间戳是秒级
+                        comments: (item.comments || []).map(comment => ({
+                            ...comment,
+                            created_at: comment.created_at ? (comment.created_at > 10000000000 ? Math.floor(comment.created_at / 1000) : comment.created_at) : Math.floor(Date.now() / 1000)
+                        }))
+                    };
+                    return fixedItem;
+                });
+                
+                console.log('加载的视频:', allVideos.length, '个');
+                console.log('加载的图片:', allImages.length, '个');
+                
+                // 如果没有数据，显示提示
+                if (allVideos.length === 0 && allImages.length === 0) {
+                    console.warn('警告: API 返回了成功状态，但没有视频和图片数据');
+                    const videoGrid = document.getElementById('videoGrid');
+                    const imageGrid = document.getElementById('imageGrid');
+                    if (videoGrid && videoGrid.children.length === 0) {
+                        videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无视频</div>';
                     }
-                    
+                    if (imageGrid && imageGrid.children.length === 0) {
+                        imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无图片</div>';
+                    }
+                } else {
                     // 初次渲染
                     renderBatch('videoGrid', allVideos, 1);
                     renderBatch('imageGrid', allImages, 1);
                     
-                    // 检查是否需要显示"加载更多"
-                    updateLoadMoreBtn();
-                } else {
-                    console.error("Server error:", data.message);
-                    // 显示错误提示
-                    const videoGrid = document.getElementById('videoGrid');
-                    const imageGrid = document.getElementById('imageGrid');
-                    if (videoGrid) videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data.message || '未知错误') + '</div>';
-                    if (imageGrid) imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data.message || '未知错误') + '</div>';
+                    // 如果有数据，自动显示第一个项目的固定操作栏（方便测试）
+                    const firstItem = allVideos.length > 0 ? allVideos[0] : (allImages.length > 0 ? allImages[0] : null);
+                    if (firstItem) {
+                        setTimeout(() => {
+                            showFixedActionBar(firstItem.id, firstItem.type);
+                        }, 500);
+                    }
                 }
+                
+                // 检查是否需要显示"加载更多"
+                updateLoadMoreBtn();
+                
+                // 更新总点赞数
+                updateTotalLikes();
+                
+                // 更新评论轮播
+                updateCommentsCarousel();
+            } else {
+                console.error("Server error:", data ? data.message : '数据格式错误');
+                // 显示错误提示
+                const videoGrid = document.getElementById('videoGrid');
+                const imageGrid = document.getElementById('imageGrid');
+                if (videoGrid) videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data && data.message ? data.message : '未知错误') + '</div>';
+                if (imageGrid) imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data && data.message ? data.message : '未知错误') + '</div>';
+            }
         }
 
         // 批量渲染函数 (实现伪分页)
@@ -1293,11 +1417,23 @@
                         </a>`;
                 }
 
-                // 评论HTML（显示最新评论，可点击查看全部）
+                // 评论HTML（只对图片显示，视频不显示）
                 let commentHtml = '';
-                if (item.comments && item.comments.length > 0) {
-                    const latestComment = item.comments[0];
-                    commentHtml = `<div class="comment-preview" onclick="showCommentList(${item.id})" style="cursor:pointer;">"${latestComment.content}"</div>`;
+                let commentStatsHtml = '';
+                if (item.type === 'image') {
+                    // 只有图片才显示评论统计和预览
+                    if (item.comments && item.comments.length > 0) {
+                        const latestComment = item.comments[0];
+                        commentHtml = `<div class="comment-preview" onclick="showCommentList(${item.id})" style="cursor:pointer;">"${latestComment.content}"</div>`;
+                    }
+                    commentStatsHtml = `
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span>💬</span>
+                                <span>${item.comments ? item.comments.length : 0}</span>
+                            </div>
+                        </div>
+                    `;
                 }
 
                 div.innerHTML = `
@@ -1305,16 +1441,7 @@
                     <button class="btn-admin-pin" onclick="togglePin(${item.id})">📌</button>
                     ${mediaHtml}
                     <div class="card-footer">
-                        <div class="card-stats">
-                            <div class="stat-item">
-                                <span>♥</span>
-                                <span>${item.likes || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>💬</span>
-                                <span>${item.comments ? item.comments.length : 0}</span>
-                            </div>
-                        </div>
+                        ${commentStatsHtml}
                     </div>
                     ${commentHtml}
                 `;
@@ -1502,7 +1629,7 @@
             const allItems = [...allVideos, ...allImages];
             const item = allItems.find(i => i.id == currentItemId);
             if (item) {
-                document.getElementById('likeCount').textContent = item.likes || 0;
+                // 不再显示点赞数，只显示评论数
                 document.getElementById('commentCount').textContent = item.comments ? item.comments.length : 0;
             }
         }
@@ -1525,15 +1652,12 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    // 更新数量
-                    document.getElementById('likeCount').textContent = data.likes;
-                    
                     // 更新本地数据
                     const allItems = [...allVideos, ...allImages];
                     const item = allItems.find(i => i.id == currentItemId);
                     if (item) {
                         item.likes = data.likes;
-                        // 更新卡片显示
+                        // 更新卡片显示（只更新评论数，点赞数在右上角显示）
                         updateCardStats(currentItemId, data.likes, item.comments ? item.comments.length : 0);
                     }
                 }
@@ -1549,8 +1673,23 @@
         // 固定栏评论功能
         function handleFixedComment() {
             if (!currentItemId) return;
-            // 显示评论列表
-            showCommentListModal(currentItemId);
+            
+            const isAdmin = document.body.classList.contains('admin-mode');
+            
+            if (isAdmin) {
+                // 管理员模式：显示评论列表（可以删除）
+                showCommentListModal(currentItemId);
+            } else {
+                // 普通用户：只显示评论输入框
+                showCommentInputModal(currentItemId);
+            }
+        }
+        
+        // 显示评论输入框（普通用户）
+        function showCommentInputModal(itemId) {
+            currentCommentItemId = itemId;
+            document.getElementById('commentModal').classList.add('active');
+            document.getElementById('commentTextarea').focus();
         }
         
         // 显示评论列表弹窗
@@ -1639,6 +1778,8 @@
                 if (data.success) {
                     showCommentListModal(itemId);
                     loadData(true);
+                    // 更新评论轮播
+                    setTimeout(updateCommentsCarousel, 500);
                 } else {
                     alert(data.message || '操作失败');
                 }
@@ -1665,6 +1806,8 @@
                     if (currentItemId) {
                         setTimeout(updateFixedBarStats, 500);
                     }
+                    // 更新评论轮播
+                    setTimeout(updateCommentsCarousel, 500);
                 } else {
                     alert('删除失败');
                 }
@@ -1697,54 +1840,204 @@
             setTimeout(() => showCommentListModal(itemId), 100);
         };
         
-        // 创建多样化点赞特效
+        // 创建多样化点赞特效（增强版）
         function createDiverseLikeEffects(btn) {
-            const emojis = ['❤️', '💖', '💕', '💗', '💓', '💝', '✨', '⭐'];
             const btnRect = btn.getBoundingClientRect();
             const centerX = btnRect.left + btnRect.width / 2;
             const centerY = btnRect.top + btnRect.height / 2;
             
-            // 创建多个粒子
-            for (let i = 0; i < 8; i++) {
+            // 多样化的表情和符号
+            const emojis = ['❤️', '💖', '💕', '💗', '💓', '💝', '✨', '⭐', '🌟', '💫', '🔥', '💯', '👍', '👏', '🎉', '🎊'];
+            
+            // 随机选择特效类型
+            const effectType = Math.floor(Math.random() * 4);
+            
+            if (effectType === 0) {
+                // 类型1：圆形扩散（8个粒子）
+                for (let i = 0; i < 8; i++) {
+                    createParticle(centerX, centerY, emojis, i, 8, 80, 40);
+                }
+            } else if (effectType === 1) {
+                // 类型2：心形轨迹（12个粒子）
+                for (let i = 0; i < 12; i++) {
+                    const angle = (Math.PI * 2 * i) / 12;
+                    const heartX = 16 * Math.pow(Math.sin(angle), 3);
+                    const heartY = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+                    const distance = 60;
+                    const tx = heartX * distance / 20;
+                    const ty = heartY * distance / 20;
+                    createParticle(centerX, centerY, emojis, i, 12, tx, ty, true);
+                }
+            } else if (effectType === 2) {
+                // 类型3：向上爆发（16个粒子，主要向上）
+                for (let i = 0; i < 16; i++) {
+                    const angle = (Math.PI * 0.8 * i) / 16 - Math.PI * 0.4; // 向上扇形
+                    const distance = 60 + Math.random() * 60;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance - 30; // 向上偏移
+                    createParticle(centerX, centerY, emojis, i, 16, tx, ty);
+                }
+            } else {
+                // 类型4：螺旋上升（10个粒子）
+                for (let i = 0; i < 10; i++) {
+                    const angle = (Math.PI * 2 * i) / 10;
+                    const spiralRadius = 30 + i * 8;
+                    const tx = Math.cos(angle) * spiralRadius;
+                    const ty = Math.sin(angle) * spiralRadius - i * 15;
+                    createParticle(centerX, centerY, emojis, i, 10, tx, ty);
+                }
+            }
+            
+            // 创建单个粒子的辅助函数
+            function createParticle(x, y, emojiList, index, total, tx, ty, isHeart = false) {
                 const effect = document.createElement('div');
                 effect.className = 'like-particle';
-                effect.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
                 
-                const angle = (Math.PI * 2 * i) / 8;
-                const distance = 80 + Math.random() * 40;
-                const tx = Math.cos(angle) * distance;
-                const ty = Math.sin(angle) * distance;
+                // 随机选择表情
+                const emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+                effect.innerHTML = emoji;
+                
+                // 随机大小
+                const size = 1.2 + Math.random() * 0.8;
+                effect.style.fontSize = (size * 2) + 'rem';
+                
+                // 随机延迟
+                const delay = index * 20 + Math.random() * 30;
+                effect.style.animationDelay = delay + 'ms';
+                
+                // 随机旋转
                 const rot = (Math.random() - 0.5) * 720;
                 
-                effect.style.left = centerX + 'px';
-                effect.style.top = centerY + 'px';
-                effect.style.setProperty('--tx', tx + 'px');
-                effect.style.setProperty('--ty', ty + 'px');
+                if (isHeart) {
+                    effect.style.setProperty('--tx', tx + 'px');
+                    effect.style.setProperty('--ty', ty + 'px');
+                } else {
+                    const angle = (Math.PI * 2 * index) / total;
+                    const distance = Math.abs(tx) || (80 + Math.random() * 40);
+                    const finalTx = Math.cos(angle) * distance;
+                    const finalTy = Math.sin(angle) * distance;
+                    effect.style.setProperty('--tx', finalTx + 'px');
+                    effect.style.setProperty('--ty', finalTy + 'px');
+                }
+                
                 effect.style.setProperty('--rot', rot + 'deg');
+                effect.style.left = x + 'px';
+                effect.style.top = y + 'px';
                 
                 document.body.appendChild(effect);
                 
                 setTimeout(() => {
-                    effect.remove();
-                }, 1500);
+                    if (effect.parentNode) {
+                        effect.remove();
+                    }
+                }, 2000);
             }
         }
         
-        // 更新卡片统计数据
+        // 更新卡片统计数据（只更新图片的评论数，视频不显示评论）
         function updateCardStats(itemId, likes, comments) {
             const cards = document.querySelectorAll('.card');
             cards.forEach(card => {
                 const cardId = card.getAttribute('data-item-id');
-                if (cardId == itemId) {
+                const cardType = card.getAttribute('data-item-type');
+                if (cardId == itemId && cardType === 'image') {
+                    // 只更新图片的评论数
                     const stats = card.querySelectorAll('.stat-item span');
                     if (stats.length >= 2) {
-                        stats[1].textContent = likes;
-                    }
-                    if (stats.length >= 4) {
-                        stats[3].textContent = comments;
+                        stats[1].textContent = comments;
                     }
                 }
             });
+            
+            // 更新总点赞数
+            updateTotalLikes();
+        }
+        
+        // 更新总点赞数
+        function updateTotalLikes() {
+            const allItems = [...allVideos, ...allImages];
+            const totalLikes = allItems.reduce((sum, item) => sum + (item.likes || 0), 0);
+            const totalLikesElement = document.getElementById('totalLikesCount');
+            if (totalLikesElement) {
+                totalLikesElement.textContent = totalLikes;
+            }
+        }
+        
+        // 更新评论轮播（只显示图片的评论，不显示视频的评论）
+        function updateCommentsCarousel() {
+            console.log('更新评论轮播...');
+            const allItems = [...allVideos, ...allImages];
+            const allComments = [];
+            
+            // 只收集图片的评论，不收集视频的评论
+            allItems.forEach(item => {
+                if (item.type === 'image' && item.comments && item.comments.length > 0) {
+                    item.comments.forEach(comment => {
+                        allComments.push({
+                            ...comment,
+                            itemId: item.id,
+                            itemType: item.type
+                        });
+                    });
+                }
+            });
+            
+            console.log('收集到的评论数量:', allComments.length);
+            
+            // 如果没有评论，隐藏轮播区域
+            const carousel = document.getElementById('commentsCarousel');
+            const carouselContent = document.getElementById('commentsCarouselContent');
+            
+            if (allComments.length === 0) {
+                if (carousel) {
+                    carousel.style.display = 'none';
+                    console.log('没有评论，隐藏轮播区域');
+                }
+                return;
+            }
+            
+            // 显示轮播区域
+            if (carousel) {
+                carousel.style.display = 'block';
+                console.log('显示评论轮播区域');
+            }
+            
+            // 按时间排序（最新的在前）
+            const sortedComments = [...allComments].sort((a, b) => {
+                const timeA = a.created_at || (a.created_at === 0 ? 0 : Date.now() / 1000);
+                const timeB = b.created_at || (b.created_at === 0 ? 0 : Date.now() / 1000);
+                return timeB - timeA;
+            });
+            
+            // 生成轮播内容（重复一次以实现无缝滚动）
+            const commentsHtml = sortedComments.map(comment => {
+                let time = '刚刚';
+                if (comment.created_at) {
+                    try {
+                        time = new Date(comment.created_at * 1000).toLocaleString('zh-CN', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                    } catch (e) {
+                        time = '刚刚';
+                    }
+                }
+                return `
+                    <div class="comment-carousel-item">
+                        <span class="comment-author">💬</span>
+                        <span class="comment-text">${comment.content || ''}</span>
+                        <span style="opacity:0.7; font-size:0.75rem;">${time}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            // 重复内容以实现无缝滚动
+            if (carouselContent) {
+                carouselContent.innerHTML = commentsHtml + commentsHtml;
+                console.log('评论轮播内容已更新，评论数量:', sortedComments.length);
+            }
         }
         
         // 评论功能（现代化弹窗）
@@ -1760,11 +2053,19 @@
             currentCommentItemId = null;
         }
         
-        // 提交评论
+        // 提交评论（防止重复提交）
+        let isSubmittingComment = false;
         document.getElementById('commentSubmitBtn').addEventListener('click', async function() {
             const content = document.getElementById('commentTextarea').value.trim();
             if (!content || !currentCommentItemId) return;
             
+            // 防止重复提交
+            if (isSubmittingComment) {
+                console.log('评论正在提交中，请勿重复点击');
+                return;
+            }
+            
+            isSubmittingComment = true;
             this.disabled = true;
             this.textContent = '发送中...';
             
@@ -1776,46 +2077,60 @@
                 const data = await res.json();
                 
                 if (data.success) {
+                    // 清空输入框
+                    document.getElementById('commentTextarea').value = '';
                     closeCommentModal();
-                    // 重新加载数据并更新固定栏
-                    loadData(true);
-                    if (currentItemId) {
-                        setTimeout(updateFixedBarStats, 500);
+                    
+                    // 直接更新本地数据，避免页面刷新
+                    const allItems = [...allVideos, ...allImages];
+                    const item = allItems.find(i => i.id == currentCommentItemId);
+                    if (item) {
+                        // 添加新评论到本地数据
+                        if (!item.comments) {
+                            item.comments = [];
+                        }
+                        // 创建新评论对象（时间戳转换为秒）
+                        const newComment = {
+                            content: content,
+                            created_at: Math.floor(Date.now() / 1000), // 转换为秒级时间戳
+                            id: item.comments.length + 1
+                        };
+                        item.comments.unshift(newComment); // 添加到开头
+                        
+                        console.log('评论已添加到本地数据，itemId:', currentCommentItemId, '评论内容:', content);
+                        console.log('当前评论列表:', item.comments);
+                        
+                        // 更新卡片显示（只更新图片的评论数）
+                        if (item.type === 'image') {
+                            updateCardStats(currentCommentItemId, item.likes, item.comments.length);
+                        }
+                        
+                        // 更新固定栏统计
+                        if (currentItemId == currentCommentItemId) {
+                            updateFixedBarStats();
+                        }
+                        
+                        // 更新评论轮播（立即更新，不需要延迟）
+                        updateCommentsCarousel();
+                    } else {
+                        console.warn('未找到对应的项目，使用刷新方式更新');
+                        // 如果找不到项目，才使用刷新方式
+                        loadData(true);
                     }
                 } else {
                     alert('评论失败，请重试');
                 }
             } catch (e) {
+                console.error('评论提交错误:', e);
                 alert('网络错误，请重试');
             } finally {
+                isSubmittingComment = false;
                 this.disabled = false;
                 this.textContent = '发送';
             }
         });
         
-        // 删除评论功能（在评论弹窗中显示）
-        window.deleteComment = async function(commentId) {
-            if (!confirm('确定要删除这条评论吗？')) return;
-            
-            try {
-                const res = await fetch(API_URL + "?action=delete_comment", { 
-                    method: 'POST', 
-                    body: JSON.stringify({ comment_id: commentId }) 
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    loadData(true);
-                    if (currentItemId) {
-                        setTimeout(updateFixedBarStats, 500);
-                    }
-                } else {
-                    alert('删除失败');
-                }
-            } catch (e) {
-                alert('网络错误');
-            }
-        };
+        // 删除评论功能已在上方定义，这里不再重复定义
         
         // 点击弹窗外部关闭
         document.getElementById('commentModal').addEventListener('click', function(e) {
@@ -1834,7 +2149,7 @@
 
         // --- 彩蛋逻辑 (上传 & 管理员) ---
         let clickCount = 0;
-        let clickTimer = null;
+        // 去掉时间限制，不再使用 clickTimer
         
         // 批量上传控件
         const fileInput = document.createElement('input');
@@ -1907,24 +2222,66 @@
 
         function checkSecretTrigger() {
             clickCount++;
-            if (clickTimer) clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => { clickCount = 0; }, 1000);
+            // 去掉时间限制，只要点击5次就触发
+            console.log('点击次数:', clickCount);
 
             if (clickCount >= 5) {
                 const action = prompt("功能菜单\n1. 上传文件\n2. 开启管理员模式");
-                if (action == '1') fileInput.click();
-                else if (action == '2') {
+                if (action == '1') {
+                    // 使用全局的 fileInput 变量（在下面定义）
+                    if (fileInput) {
+                        fileInput.click();
+                    } else {
+                        alert('文件上传功能未找到');
+                    }
+                } else if (action == '2') {
                     if(prompt("密码") === '123') {
                         document.body.classList.add('admin-mode');
+                        const adminBtn = document.getElementById('fixedAdminBtn');
+                        if (adminBtn) {
+                            adminBtn.style.display = 'block';
+                        }
                         alert("已开启管理员模式");
+                    } else {
+                        alert("密码错误");
                     }
                 }
-                clickCount = 0;
+                clickCount = 0; // 重置计数
             }
         }
         
-        document.getElementById('secretTitle').addEventListener('click', checkSecretTrigger);
-        document.getElementById('secretFooter').addEventListener('click', checkSecretTrigger);
+        // 确保 DOM 加载完成后再绑定事件
+        function initSecretTrigger() {
+            const secretTitle = document.getElementById('secretTitle');
+            const secretFooter = document.getElementById('secretFooter');
+            
+            if (secretTitle) {
+                secretTitle.addEventListener('click', checkSecretTrigger);
+                secretTitle.style.cursor = 'pointer';
+                console.log('已绑定标题点击事件');
+            } else {
+                console.warn('未找到 secretTitle 元素');
+            }
+            
+            if (secretFooter) {
+                secretFooter.addEventListener('click', checkSecretTrigger);
+                console.log('已绑定底部点击事件');
+            } else {
+                console.warn('未找到 secretFooter 元素');
+            }
+        }
+        
+        // 页面加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initSecretTrigger();
+                initPage(); // 初始化页面数据加载
+            });
+        } else {
+            // DOM 已经加载完成
+            initSecretTrigger();
+            initPage(); // 初始化页面数据加载
+        }
 
     </script>
 </body>

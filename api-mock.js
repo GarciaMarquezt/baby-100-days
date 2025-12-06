@@ -61,12 +61,18 @@ window.mockAPI = {
             setTimeout(() => {
                 const files = mockData.files.map(file => {
                     const comments = mockData.comments[file.id] || [];
+                    // 转换时间戳为秒级（如果已经是秒级则不变）
+                    const formattedComments = comments.map((comment, index) => ({
+                        ...comment,
+                        id: comment.id || (index + 1),
+                        created_at: comment.created_at ? (comment.created_at > 10000000000 ? Math.floor(comment.created_at / 1000) : comment.created_at) : Math.floor(Date.now() / 1000)
+                    }));
                     return {
                         ...file,
-                        comments: comments.slice(0, 3), // 只返回最近3条
+                        comments: formattedComments, // 返回所有评论，不限制数量
                         url: file.type === 'image' 
-                            ? `babyimage/${file.filename}` 
-                            : `babyimage/${file.filename}`
+                            ? `uploads/images/${file.filename}` 
+                            : `uploads/videos/${file.filename}`
                     };
                 });
                 
@@ -125,10 +131,15 @@ window.mockAPI = {
                 if (!mockData.comments[id]) {
                     mockData.comments[id] = [];
                 }
+                // 使用秒级时间戳
                 mockData.comments[id].unshift({
                     content: content,
-                    created_at: Date.now()
+                    created_at: Math.floor(Date.now() / 1000), // 秒级时间戳
+                    id: mockData.comments[id].length + 1
                 });
+                
+                console.log('Mock API: 评论已保存，itemId:', id, '评论内容:', content);
+                console.log('Mock API: 当前评论列表:', mockData.comments[id]);
                 
                 resolve({ success: true });
             }, 300);
@@ -202,61 +213,115 @@ window.mockAPI = {
 // 拦截 fetch 请求（如果 API_URL 设置为 'mock'）
 const originalFetch = window.fetch;
 window.fetch = function(url, options) {
+    const urlString = typeof url === 'string' ? url : (url && url.url ? url.url : '');
+    
     // 检查是否是 mock API 请求
-    if (typeof url === 'string' && url.includes('action=')) {
-        const urlObj = new URL(url, window.location.origin);
-        const action = urlObj.searchParams.get('action');
+    // 1. URL 是 'mock' 开头
+    // 2. 或者 URL 包含 'action=' 且是本地环境
+    const isMockRequest = urlString.startsWith('mock') || 
+                          (urlString.includes('action=') && 
+                           (window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' ||
+                            window.location.search.includes('mock=1')));
+    
+    if (isMockRequest) {
+        console.log('🎭 Mock API 拦截请求:', urlString);
         
-        if (action) {
-            // 解析请求
-            if (options && options.method === 'POST') {
-                const body = JSON.parse(options.body || '{}');
+        try {
+            let action = null;
+            let body = {};
+            
+            // 解析 URL 获取 action
+            if (urlString.includes('action=')) {
+                try {
+                    const urlObj = new URL(urlString, window.location.origin);
+                    action = urlObj.searchParams.get('action');
+                } catch (e) {
+                    // 如果 URL 解析失败，尝试手动解析
+                    const match = urlString.match(/action=([^&]+)/);
+                    if (match) action = match[1];
+                }
+            } else if (urlString.startsWith('mock')) {
+                // 如果 URL 就是 'mock'，尝试从 options 中获取
+                if (options && options.url) {
+                    const match = options.url.match(/action=([^&]+)/);
+                    if (match) action = match[1];
+                }
+            }
+            
+            // 解析 POST 请求体
+            if (options && options.method === 'POST' && options.body) {
+                if (typeof options.body === 'string') {
+                    try {
+                        body = JSON.parse(options.body);
+                    } catch (e) {
+                        console.warn('无法解析请求体:', e);
+                    }
+                } else if (options.body instanceof FormData) {
+                    // FormData 处理（上传文件）
+                    body = { isFormData: true, formData: options.body };
+                }
+            }
+            
+            if (action) {
+                console.log('🎭 Mock API 处理:', action, body);
                 
                 switch(action) {
                     case 'list':
-                        return mockAPI.list().then(data => new Response(JSON.stringify(data), {
-                            headers: { 'Content-Type': 'application/json' }
-                        }));
+                        return mockAPI.list().then(data => {
+                            console.log('🎭 Mock API 返回列表数据:', data);
+                            return new Response(JSON.stringify(data), {
+                                status: 200,
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                        });
                     case 'like':
                         return mockAPI.like(body.id).then(data => new Response(JSON.stringify(data), {
+                            status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     case 'unlike':
                         return mockAPI.unlike(body.id).then(data => new Response(JSON.stringify(data), {
+                            status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     case 'comment':
                         return mockAPI.comment(body.id, body.content).then(data => new Response(JSON.stringify(data), {
+                            status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     case 'delete_comment':
                         return mockAPI.deleteComment(body.comment_id).then(data => new Response(JSON.stringify(data), {
+                            status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     case 'pin':
                         return mockAPI.pin(body.id, body.password).then(data => new Response(JSON.stringify(data), {
+                            status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         }));
                     case 'upload':
                         // 处理文件上传（简化版）
                         return new Promise((resolve) => {
-                            const formData = options.body;
-                            const files = [];
-                            // 这里简化处理，实际应该解析 FormData
-                            resolve(new Response(JSON.stringify({
-                                success: true,
-                                uploaded: [],
-                                errors: []
-                            }), {
-                                headers: { 'Content-Type': 'application/json' }
-                            }));
+                            setTimeout(() => {
+                                resolve(new Response(JSON.stringify({
+                                    success: true,
+                                    uploaded: [{ id: mockData.files.length + 1, filename: 'test.jpg', type: 'image' }],
+                                    errors: []
+                                }), {
+                                    status: 200,
+                                    headers: { 'Content-Type': 'application/json' }
+                                }));
+                            }, 500);
                         });
+                    default:
+                        console.warn('🎭 Mock API 未知 action:', action);
                 }
-            } else if (action === 'list') {
-                return mockAPI.list().then(data => new Response(JSON.stringify(data), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
+            } else {
+                console.warn('🎭 Mock API 无法解析 action');
             }
+        } catch (e) {
+            console.error('🎭 Mock API 错误:', e);
         }
     }
     
