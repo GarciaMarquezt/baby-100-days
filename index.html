@@ -83,7 +83,7 @@
                 <div class="hero-right">
                     <div class="main-visual" data-aos="zoom-in" data-aos-duration="1500">
                         <div class="image-mask">
-                            <img src="babyimage/1.jpg" alt="Baby" class="hero-img" loading="eager">
+                            <img src="uploads/images/1.jpg" alt="Baby" class="hero-img" loading="eager" onerror="fixImagePath(this)">
                         </div>
                         <div class="floating-deco deco-1" data-rellax-speed="2"></div>
                         <div class="floating-deco deco-2" data-rellax-speed="-1"></div>
@@ -118,7 +118,7 @@
                     </p>
                 </div>
                 <div class="img-box" data-aos="fade-left">
-                    <img src="babyimage/2.jpg" alt="Family" class="story-img" loading="lazy">
+                    <img src="uploads/images/2.jpg" alt="Family" class="story-img" loading="lazy" onerror="fixImagePath(this)">
                     <div class="img-frame"></div>
                 </div>
             </div>
@@ -126,14 +126,14 @@
 
         <!-- 第三屏：3D邀请函 (时间地点) -->
         <section class="invite-section">
-            <div class="card-3d-container" data-aos="flip-up" onclick="this.classList.toggle('flipped')">
+            <div class="card-3d-container" id="card3dContainer" data-aos="flip-up">
                 <div class="card-3d">
                     <!-- 正面 -->
                     <div class="card-front">
                         <div class="stamp">INVITATION</div>
                         <h3>诚挚邀请</h3>
                         <p class="host">严蓬春 & 田梦 敬邀</p>
-                        <div class="tap-hint">👆 点击翻转查看详情</div>
+                        <div class="tap-hint" onclick="flipCard()">👆 点击翻转查看详情</div>
                     </div>
                     <!-- 背面 -->
                     <div class="card-back">
@@ -209,15 +209,26 @@
             const currentPath = window.location.pathname;
             const baseDir = currentPath.substring(0, currentPath.lastIndexOf('/')) || '';
             
+            // 将 babyimage 路径转换为 uploads/images 路径
+            let convertedSrc = originalSrc;
+            if (convertedSrc.includes('babyimage/')) {
+                convertedSrc = convertedSrc.replace(/babyimage\//g, 'uploads/images/');
+            }
+            
             // 尝试多种路径格式（解决宝塔面板路径问题）
             const possiblePaths = [
+                convertedSrc,  // 转换后的路径
                 originalSrc,  // 原始路径
-                './' + originalSrc.replace(/^\.?\//, ''),  // 相对路径
-                '/' + originalSrc.replace(/^\.?\//, ''),  // 绝对路径
-                baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 基于当前目录
-                basePath + baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 完整路径
-                originalSrc.replace(/^babyimage\//, './babyimage/'),  // 修复相对路径
-                originalSrc.replace(/^\.\/babyimage\//, '/babyimage/')  // 修复绝对路径
+                './' + convertedSrc.replace(/^\.?\//, ''),  // 相对路径（转换后）
+                '/' + convertedSrc.replace(/^\.?\//, ''),  // 绝对路径（转换后）
+                baseDir + '/' + convertedSrc.replace(/^\.?\//, ''),  // 基于当前目录（转换后）
+                basePath + baseDir + '/' + convertedSrc.replace(/^\.?\//, ''),  // 完整路径（转换后）
+                './' + originalSrc.replace(/^\.?\//, ''),  // 相对路径（原始）
+                '/' + originalSrc.replace(/^\.?\//, ''),  // 绝对路径（原始）
+                baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 基于当前目录（原始）
+                basePath + baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 完整路径（原始）
+                originalSrc.replace(/^babyimage\//, './uploads/images/'),  // 修复相对路径
+                originalSrc.replace(/^\.\/babyimage\//, '/uploads/images/')  // 修复绝对路径
             ];
             
             // 去重
@@ -251,22 +262,47 @@
             tryNextPath();
         }
         
+        // 3D卡片翻转函数
+        function flipCard() {
+            const container = document.getElementById('card3dContainer');
+            if (container) {
+                container.classList.toggle('flipped');
+                console.log('卡片翻转，当前状态:', container.classList.contains('flipped') ? '已翻转' : '正面');
+            }
+        }
+        
         // 页面加载
         window.onload = function() {
             // 生成地图链接（使用正确的坐标）
             generateMapLinks();
             
-            // 修复所有图片路径
-            document.querySelectorAll('img[src*="babyimage"]').forEach(img => {
-                img.setAttribute('data-original', img.src);
-                img.onerror = function() {
-                    fixImagePath(this);
-                };
-                // 预加载检查
-                if (!img.complete) {
-                    fixImagePath(img);
+            // 修复所有图片路径（包括 uploads 路径）
+            document.querySelectorAll('img').forEach(img => {
+                const src = img.src || img.getAttribute('src');
+                if (src && (src.includes('babyimage') || src.includes('uploads'))) {
+                    img.setAttribute('data-original', src);
+                    img.onerror = function() {
+                        fixImagePath(this);
+                    };
+                    // 预加载检查
+                    if (!img.complete) {
+                        fixImagePath(img);
+                    }
                 }
             });
+            
+            // 为3D卡片添加点击事件（点击整个卡片也可以翻转）
+            const cardContainer = document.getElementById('card3dContainer');
+            if (cardContainer) {
+                cardContainer.addEventListener('click', function(e) {
+                    // 如果点击的是提示文字，不重复触发
+                    if (e.target.classList.contains('tap-hint')) {
+                        return;
+                    }
+                    flipCard();
+                });
+                console.log('3D卡片点击事件已绑定');
+            }
             
             document.getElementById('loading').style.opacity = '0';
             setTimeout(() => {

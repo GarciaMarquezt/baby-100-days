@@ -497,8 +497,12 @@ body {
     transform: rotateY(180deg) scale(1.05);
 }
 
-.card-3d-container:hover .card-3d:not(.flipped) {
+.card-3d-container:hover .card-3d {
     transform: translateY(-20px) rotateX(5deg);
+}
+
+.card-3d-container.flipped:hover .card-3d {
+    transform: rotateY(180deg) scale(1.05) translateY(-20px);
 }
 
 .card-front, .card-back {
