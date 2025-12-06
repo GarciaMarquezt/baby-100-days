@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;700&display=swap" rel="stylesheet">
     <!-- 动画库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <!-- 未来感特效库 -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     
     <!-- 动态加载 CSS (自动添加时间戳，彻底解决微信缓存) -->
     <script>
@@ -41,7 +43,7 @@
     <audio id="bgm" loop src="https://music.163.com/song/media/outer/url?id=1860587682.mp3"></audio>
 
     <!-- 动态背景画布 -->
-    <canvas id="particleCanvas"></canvas>
+    <div id="particleCanvas"></div>
 
     <!-- 主要内容 -->
     <main class="scroll-container">
@@ -57,7 +59,7 @@
                 
                 <div class="main-visual" data-aos="zoom-out" data-aos-duration="1500">
                     <div class="image-mask">
-                        <img src="babyimage/1.jpg" alt="Baby" class="hero-img">
+                        <img src="babyimage/1.jpg" alt="Baby" class="hero-img" loading="eager">
                     </div>
                     <div class="floating-deco deco-1" data-rellax-speed="2"></div>
                     <div class="floating-deco deco-2" data-rellax-speed="-1"></div>
@@ -91,7 +93,7 @@
                     </p>
                 </div>
                 <div class="img-box" data-aos="fade-left">
-                    <img src="babyimage/2.jpg" alt="Family" class="story-img">
+                    <img src="babyimage/2.jpg" alt="Family" class="story-img" loading="lazy">
                     <div class="img-frame"></div>
                 </div>
             </div>
@@ -140,18 +142,16 @@
             <div class="menu-title">请选择地图</div>
             <!-- 
                 经纬度：祁阳鑫利大酒店
-                百度坐标 (BD-09): 111.883652, 26.585436 (需确认)
-                火星坐标 (GCJ-02, 高德/腾讯用): 需转换
+                基准坐标 (WGS84/GCJ-02): 经度 111.883652, 纬度 26.585436
+                注意：不同地图使用不同坐标系统和格式
             -->
-            <!-- 使用百度官方 Web 接口，兼容微信拦截 -->
-            <a href="http://api.map.baidu.com/marker?location=26.585436,111.883652&title=祁阳鑫利大酒店&content=四楼1号会议厅&output=html&src=webapp.baidu.openAPIdemo" target="_blank" class="menu-item">
+            <a href="#" id="baiduMapLink" target="_blank" class="menu-item">
                 <span style="color:#d32f2f">百度地图</span> (通用)
             </a>
-            <!-- 使用高德官方 URI 链接，兼容性最好，能自动唤起 APP -->
-            <a href="https://uri.amap.com/marker?position=111.8771,26.5828&name=祁阳鑫利大酒店&src=invitation&coordinate=gaode&callnative=1" target="_blank" class="menu-item">
+            <a href="#" id="gaodeMapLink" target="_blank" class="menu-item">
                 <span style="color:#0091ff">高德地图</span> (推荐)
             </a>
-            <a href="https://apis.map.qq.com/uri/v1/marker?marker=coord:26.5828,111.8771;title:祁阳鑫利大酒店;addr:四楼1号会议厅" target="_blank" class="menu-item">
+            <a href="#" id="tencentMapLink" target="_blank" class="menu-item">
                 <span style="color:#00c853">腾讯/网页地图</span> (通用)
             </a>
             <div class="menu-cancel" onclick="closeMapMenu()">取消</div>
@@ -172,8 +172,77 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     
     <script>
+        // 图片路径修复函数（解决宝塔面板手机端访问问题）
+        function fixImagePath(img) {
+            if (!img) return;
+            
+            const originalSrc = img.getAttribute('data-original') || img.src || img.getAttribute('src');
+            if (!originalSrc) return;
+            
+            // 获取基础路径
+            const basePath = window.location.origin;
+            const currentPath = window.location.pathname;
+            const baseDir = currentPath.substring(0, currentPath.lastIndexOf('/')) || '';
+            
+            // 尝试多种路径格式（解决宝塔面板路径问题）
+            const possiblePaths = [
+                originalSrc,  // 原始路径
+                './' + originalSrc.replace(/^\.?\//, ''),  // 相对路径
+                '/' + originalSrc.replace(/^\.?\//, ''),  // 绝对路径
+                baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 基于当前目录
+                basePath + baseDir + '/' + originalSrc.replace(/^\.?\//, ''),  // 完整路径
+                originalSrc.replace(/^babyimage\//, './babyimage/'),  // 修复相对路径
+                originalSrc.replace(/^\.\/babyimage\//, '/babyimage/')  // 修复绝对路径
+            ];
+            
+            // 去重
+            const uniquePaths = [...new Set(possiblePaths)];
+            
+            let currentIndex = 0;
+            const tryNextPath = () => {
+                if (currentIndex >= uniquePaths.length) {
+                    console.warn('无法加载图片:', originalSrc);
+                    return;
+                }
+                
+                const testPath = uniquePaths[currentIndex];
+                const testImg = new Image();
+                
+                testImg.onload = () => {
+                    img.src = testPath;
+                    img.onerror = null; // 成功后清除错误处理
+                    console.log('图片加载成功:', testPath);
+                };
+                
+                testImg.onerror = () => {
+                    currentIndex++;
+                    tryNextPath();
+                };
+                
+                // 添加时间戳防止缓存
+                testImg.src = testPath + (testPath.includes('?') ? '&' : '?') + 't=' + Date.now();
+            };
+            
+            tryNextPath();
+        }
+        
         // 页面加载
         window.onload = function() {
+            // 生成地图链接（使用正确的坐标）
+            generateMapLinks();
+            
+            // 修复所有图片路径
+            document.querySelectorAll('img[src*="babyimage"]').forEach(img => {
+                img.setAttribute('data-original', img.src);
+                img.onerror = function() {
+                    fixImagePath(this);
+                };
+                // 预加载检查
+                if (!img.complete) {
+                    fixImagePath(img);
+                }
+            });
+            
             document.getElementById('loading').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
@@ -214,45 +283,145 @@
             isPlaying = !isPlaying;
         });
 
-        // 简单粒子效果
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        const particles = [];
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 + 0.5;
-                this.color = `rgba(255, 182, 193, ${Math.random() * 0.5})`; // 粉色
-            }
-            update() {
-                this.y += this.speedY;
-                this.x += this.speedX;
-                if(this.y > canvas.height) this.y = 0;
-                if(this.x > canvas.width) this.x = 0;
-                if(this.x < 0) this.x = canvas.width;
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+        // 未来感粒子特效
+        function initParticleEffect() {
+            // 如果particles.js可用，使用它；否则使用canvas降级方案
+            const container = document.getElementById('particleCanvas');
+            if (!container) return;
+            
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS('particleCanvas', {
+                    particles: {
+                        number: { value: 80, density: { enable: true, value_area: 800 } },
+                        color: { value: ['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb'] },
+                        shape: { type: 'circle' },
+                        opacity: { value: 0.4, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false } },
+                        size: { value: 4, random: true, anim: { enable: true, speed: 2, size_min: 0.1, sync: false } },
+                        line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.2, width: 1 },
+                        move: { enable: true, speed: 1.5, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false, attract: { enable: false, rotateX: 600, rotateY: 1200 } }
+                    },
+                    interactivity: {
+                        detect_on: 'canvas',
+                        events: { onhover: { enable: true, mode: 'bubble' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                        modes: { grab: { distance: 400, line_linked: { opacity: 1 } }, bubble: { distance: 250, size: 6, duration: 2, opacity: 0.8, speed: 3 }, repulse: { distance: 200, duration: 0.4 }, push: { particles_nb: 4 }, remove: { particles_nb: 2 } }
+                    },
+                    retina_detect: true
+                });
+            } else {
+                // 降级方案：使用Canvas粒子
+                const canvas = document.createElement('canvas');
+                canvas.id = 'particleCanvas';
+                canvas.style.position = 'fixed';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.zIndex = '0';
+                canvas.style.pointerEvents = 'none';
+                container.appendChild(canvas);
+                
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                const particles = [];
+                class Particle {
+                    constructor() {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * canvas.height;
+                        this.size = Math.random() * 3 + 1;
+                        this.speedX = (Math.random() - 0.5) * 1;
+                        this.speedY = (Math.random() - 0.5) * 1;
+                        this.color = `rgba(255, 182, 193, ${Math.random() * 0.5 + 0.2})`;
+                    }
+                    update() {
+                        this.y += this.speedY;
+                        this.x += this.speedX;
+                        if(this.y > canvas.height) this.y = 0;
+                        if(this.y < 0) this.y = canvas.height;
+                        if(this.x > canvas.width) this.x = 0;
+                        if(this.x < 0) this.x = canvas.width;
+                    }
+                    draw() {
+                        ctx.fillStyle = this.color;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                for(let i=0; i<60; i++) particles.push(new Particle());
+                
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles.forEach(p => { p.update(); p.draw(); });
+                    requestAnimationFrame(animate);
+                }
+                animate();
             }
         }
         
-        for(let i=0; i<50; i++) particles.push(new Particle());
+        // 页面加载后初始化粒子
+        window.addEventListener('load', function() {
+            setTimeout(initParticleEffect, 300);
+        });
         
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
+        // 窗口大小改变时重新初始化
+        window.addEventListener('resize', function() {
+            const container = document.getElementById('particleCanvas');
+            const canvas = container.querySelector('canvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+
+        // 地图坐标配置（祁阳鑫利大酒店）
+        // 基准坐标：WGS84/GCJ-02 经度,纬度
+        const BASE_LONGITUDE = 111.836;  // 经度
+        const BASE_LATITUDE = 26.5755;    // 纬度
+        const LOCATION_NAME = '祁阳鑫利大酒店';
+        const LOCATION_ADDRESS = '四楼1号会议厅';
+
+        // 坐标转换函数：GCJ-02 转 BD-09（百度地图使用）
+        // 使用标准的坐标转换算法
+        function gcj02ToBd09(lng, lat) {
+            const x_PI = 3.14159265358979324 * 3000.0 / 180.0;
+            const PI = 3.1415926535897932384626;
+            
+            // 将经纬度转换为弧度
+            let z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_PI);
+            let theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_PI);
+            
+            // 转换为百度坐标
+            let bd_lng = z * Math.cos(theta) + 0.0065;
+            let bd_lat = z * Math.sin(theta) + 0.006;
+            
+            return { 
+                lng: parseFloat(bd_lng.toFixed(6)), 
+                lat: parseFloat(bd_lat.toFixed(6)) 
+            };
         }
-        animate();
+
+        // 生成地图链接
+        function generateMapLinks() {
+            // 百度地图：使用 BD-09 坐标，格式：纬度,经度
+            const bd09 = gcj02ToBd09(BASE_LONGITUDE, BASE_LATITUDE);
+            const baiduUrl = `http://api.map.baidu.com/marker?location=${bd09.lat},${bd09.lng}&title=${encodeURIComponent(LOCATION_NAME)}&content=${encodeURIComponent(LOCATION_ADDRESS)}&output=html&src=webapp.baidu.openAPIdemo`;
+            document.getElementById('baiduMapLink').href = baiduUrl;
+            console.log('百度地图坐标 (BD-09):', bd09.lat, ',', bd09.lng);
+
+            // 高德地图：使用 GCJ-02 坐标，格式：经度,纬度
+            const gaodeUrl = `https://uri.amap.com/marker?position=${BASE_LONGITUDE},${BASE_LATITUDE}&name=${encodeURIComponent(LOCATION_NAME)}&src=invitation&coordinate=gaode&callnative=1`;
+            document.getElementById('gaodeMapLink').href = gaodeUrl;
+            console.log('高德地图坐标 (GCJ-02):', BASE_LONGITUDE, ',', BASE_LATITUDE);
+
+            // 腾讯地图：使用 GCJ-02 坐标，格式：纬度,经度
+            const tencentUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${BASE_LATITUDE},${BASE_LONGITUDE};title:${encodeURIComponent(LOCATION_NAME)};addr:${encodeURIComponent(LOCATION_ADDRESS)}`;
+            document.getElementById('tencentMapLink').href = tencentUrl;
+            console.log('腾讯地图坐标 (GCJ-02):', BASE_LATITUDE, ',', BASE_LONGITUDE);
+        }
+
 
         // 地图菜单控制
         function showMapMenu() {

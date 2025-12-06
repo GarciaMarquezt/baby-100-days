@@ -7,6 +7,9 @@
     <!-- 引入字体和图标 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
+    <!-- 未来感特效库 -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
     
     <style>
         :root {
@@ -21,11 +24,20 @@
             margin: 0;
             padding: 0;
             font-family: 'Noto Sans SC', sans-serif;
-            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
-            background-attachment: fixed; /* 背景固定，产生视差感 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             color: var(--text-main);
             -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow-x: hidden;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* 动态背景光晕 */
@@ -77,6 +89,7 @@
             font-size: 1.2rem;
             background: linear-gradient(to right, #ff4757, #ff6b81);
             -webkit-background-clip: text;
+            background-clip: text;
             color: transparent;
             font-weight: 800;
         }
@@ -156,43 +169,56 @@
             align-items: center;
             justify-content: center;
             color: #fff;
+            overflow: hidden;
+            border-radius: 16px 16px 0 0;
         }
         .video-placeholder.has-thumb {
             background: transparent; /* 有图就不显示背景色 */
         }
+        .video-placeholder img {
+            transition: transform 0.3s ease;
+        }
+        .video-placeholder img.video-thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .video-placeholder:hover img {
+            transform: scale(1.05);
+        }
         .play-icon {
             font-size: 3rem;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
             opacity: 0.9;
+            transition: transform 0.2s ease;
+            z-index: 3;
+        }
+        .video-placeholder:hover .play-icon {
+            transform: scale(1.1);
+            opacity: 1;
         }
 
-        /* 卡片底部交互 */
+        /* 卡片底部交互 - 简化，只显示统计 */
         .card-footer {
             padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.85rem;
+            color: #747d8c;
         }
-        .btn-action {
-            background: none;
-            border: none;
-            cursor: pointer;
+        .card-stats {
+            display: flex;
+            gap: 15px;
+        }
+        .stat-item {
             display: flex;
             align-items: center;
             gap: 4px;
-            color: #747d8c;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-        .btn-action.liked {
-            color: var(--primary);
-        }
-        .btn-action.liked .icon {
-            animation: pop 0.3s;
-        }
-        
-        @keyframes pop {
-            50% { transform: scale(1.4); }
         }
 
         /* 置顶角标 */
@@ -252,6 +278,310 @@
             text-overflow: ellipsis;
         }
         
+        /* 现代化评论弹窗 */
+        .comment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .comment-modal.active {
+            display: flex;
+        }
+        .comment-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .comment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .comment-modal-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #ff4757, #ff6b81);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .comment-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        .comment-modal-close:hover {
+            color: #ff4757;
+        }
+        .comment-modal-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .comment-modal-textarea:focus {
+            outline: none;
+            border-color: #ff4757;
+        }
+        .comment-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .comment-modal-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .comment-modal-btn-primary {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: white;
+        }
+        .comment-modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .comment-modal-btn-cancel {
+            background: #f1f2f6;
+            color: #57606f;
+        }
+        .comment-modal-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+        
+        /* 点赞特效 */
+        .like-effect {
+            position: absolute;
+            pointer-events: none;
+            font-size: 2rem;
+            animation: likeFloat 1s ease-out forwards;
+        }
+        @keyframes likeFloat {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-30px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(0.8);
+                opacity: 0;
+            }
+        }
+        .btn-action.liked {
+            animation: likePulse 0.5s ease;
+        }
+        @keyframes likePulse {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(0.9); }
+            75% { transform: scale(1.1); }
+        }
+        
+        /* 批量上传样式 */
+        .upload-progress {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 9999;
+            display: none;
+        }
+        .upload-progress.active {
+            display: block;
+            animation: slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .upload-progress-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .upload-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .upload-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            transition: width 0.3s;
+        }
+        
+        /* 右下角固定操作栏 */
+        .fixed-action-bar {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .action-btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        .action-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+        }
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+        .action-btn.like-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        .action-btn.like-btn:hover {
+            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
+        }
+        .action-btn.comment-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+        .action-btn.comment-btn:hover {
+            box-shadow: 0 12px 30px rgba(78, 205, 196, 0.6);
+        }
+        .action-btn.active {
+            animation: actionPulse 0.6s ease;
+        }
+        @keyframes actionPulse {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.3) rotate(-10deg); }
+            50% { transform: scale(0.9) rotate(10deg); }
+            75% { transform: scale(1.2) rotate(-5deg); }
+        }
+        .action-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+            animation: countBounce 0.5s ease;
+        }
+        @keyframes countBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        /* 点赞特效 - 多样化 */
+        .like-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 2rem;
+            z-index: 10000;
+            animation: likeFloat 1.5s ease-out forwards;
+        }
+        @keyframes likeFloat {
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx, 0), var(--ty, -100px)) scale(1.5) rotate(var(--rot, 360deg));
+                opacity: 0;
+            }
+        }
+        
+        /* 粒子背景 */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
         /* 彩蛋点击区 */
         .easter-egg-area {
             text-align: center;
@@ -264,6 +594,9 @@
 </head>
 <body>
 
+    <!-- 粒子背景 -->
+    <div id="particles-js"></div>
+    
     <!-- 动态背景 -->
     <div class="bg-orb orb-1"></div>
     <div class="bg-orb orb-2"></div>
@@ -309,10 +642,53 @@
         </div>
     </div>
 
+    <!-- 右下角固定操作栏 -->
+    <div class="fixed-action-bar" id="fixedActionBar" style="display:none;">
+        <button class="action-btn like-btn" id="fixedLikeBtn" onclick="handleFixedLike()">
+            <span>❤️</span>
+            <span class="action-count" id="likeCount">0</span>
+        </button>
+        <button class="action-btn comment-btn" id="fixedCommentBtn" onclick="handleFixedComment()">
+            <span>💬</span>
+            <span class="action-count" id="commentCount">0</span>
+        </button>
+    </div>
+
+    <!-- 评论弹窗 -->
+    <div class="comment-modal" id="commentModal">
+        <div class="comment-modal-content">
+            <div class="comment-modal-header">
+                <h3 class="comment-modal-title">写下您的祝福</h3>
+                <button class="comment-modal-close" onclick="closeCommentModal()">×</button>
+            </div>
+            <textarea class="comment-modal-textarea" id="commentTextarea" placeholder="输入您的祝福..."></textarea>
+            <div class="comment-modal-actions">
+                <button class="comment-modal-btn comment-modal-btn-cancel" onclick="closeCommentModal()">取消</button>
+                <button class="comment-modal-btn comment-modal-btn-primary" id="commentSubmitBtn">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传进度提示 -->
+    <div class="upload-progress" id="uploadProgress">
+        <div id="uploadProgressContent"></div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <!-- Mock API (仅本地开发使用) -->
+    <script src="api-mock.js"></script>
     <script>
         // 配置
-        const API_URL = "https://upload.1101020.xyz/api.php"; 
+        // 检查是否使用 Mock API（通过 URL 参数或全局变量）
+        const urlParams = new URLSearchParams(window.location.search);
+        const useMock = urlParams.get('mock') === '1' || window.USE_MOCK_API || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = useMock ? 'mock' : "https://upload.1101020.xyz/api.php";
+        
+        if (useMock) {
+            console.log('🧪 使用 Mock API 模式（本地测试）');
+        } 
+        const IMAGES_BASE_PATH = "https://upload.1101020.xyz/uploads/images/"; // 图片文件夹路径
+        const VIDEOS_BASE_PATH = "https://upload.1101020.xyz/uploads/videos/"; // 视频文件夹路径
         
         // 状态管理
         let allVideos = [];
@@ -323,32 +699,325 @@
 
         Fancybox.bind("[data-fancybox]", {});
 
+        // 从视频提取第一帧作为封面
+        function extractVideoThumbnail(videoUrl, imgElement) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.crossOrigin = 'anonymous';
+                video.preload = 'metadata';
+                
+                video.onloadedmetadata = () => {
+                    // 跳转到第1秒（或0.5秒）获取帧
+                    video.currentTime = 0.5;
+                };
+                
+                video.onseeked = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // 转换为图片
+                        const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        imgElement.src = thumbnailUrl;
+                        imgElement.onerror = null;
+                        console.log('成功从视频提取封面');
+                        resolve(true);
+                    } catch (e) {
+                        console.warn('提取视频封面失败:', e);
+                        resolve(false);
+                    }
+                };
+                
+                video.onerror = () => {
+                    console.warn('视频加载失败，无法提取封面');
+                    resolve(false);
+                };
+                
+                video.src = videoUrl;
+            });
+        }
+
+        // 视频封面加载错误处理
+        function handleVideoThumbError(img, videoUrl) {
+            console.warn('视频封面加载失败，尝试其他方法:', videoUrl);
+            
+            // 尝试多种方法获取视频封面
+            const baseUrl = 'https://upload.1101020.xyz/';
+            const fileName = videoUrl.split('/').pop().split('?')[0];
+            const possibleThumbs = [
+                baseUrl + 'uploads/thumb_' + fileName.replace(/\.[^.]+$/, '.jpg'),
+                baseUrl + 'uploads/' + fileName.replace(/\.[^.]+$/, '_thumb.jpg'),
+                baseUrl + 'uploads/' + fileName.replace(/\.[^.]+$/, '.jpg'),
+                videoUrl + (videoUrl.includes('?') ? '&' : '?') + 't=1',
+                videoUrl + (videoUrl.includes('?') ? '&' : '?') + 't=2'
+            ];
+            
+            let currentIndex = 0;
+            const tryNextThumb = () => {
+                if (currentIndex >= possibleThumbs.length) {
+                    // 所有URL方法都失败，尝试从视频提取
+                    extractVideoThumbnail(videoUrl, img).then(success => {
+                        if (!success) {
+                            // 提取也失败，显示默认背景
+                            img.style.display = 'none';
+                            const placeholder = img.closest('.video-placeholder');
+                            if (placeholder) {
+                                placeholder.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                            }
+                        }
+                    });
+                    return;
+                }
+                
+                const testUrl = possibleThumbs[currentIndex];
+                const testImg = new Image();
+                
+                testImg.onload = () => {
+                    img.src = testUrl;
+                    img.onerror = null;
+                    console.log('视频封面加载成功:', testUrl);
+                };
+                
+                testImg.onerror = () => {
+                    currentIndex++;
+                    tryNextThumb();
+                };
+                
+                testUrl.includes('?') ? testImg.src = testUrl + '&t=' + Date.now() : testImg.src = testUrl + '?t=' + Date.now();
+            };
+            
+            tryNextThumb();
+        }
+
+        // 图片加载错误处理函数
+        function handleImageError(img, originalUrl) {
+            console.warn('图片加载失败，尝试修复路径:', originalUrl);
+            
+            // 尝试多种路径格式
+            const baseUrl = 'https://upload.1101020.xyz/';
+            const possiblePaths = [
+                originalUrl,
+                baseUrl + 'uploads/' + originalUrl.split('/').pop(),
+                baseUrl + 'upload/' + originalUrl.split('/').pop(),
+                originalUrl.replace(/^https?:\/\/[^\/]+\//, baseUrl + 'uploads/'),
+                originalUrl.replace(/^https?:\/\/[^\/]+\/upload\//, baseUrl + 'uploads/')
+            ];
+            
+            let currentIndex = 0;
+            const tryNextPath = () => {
+                if (currentIndex >= possiblePaths.length) {
+                    console.error('所有路径尝试失败，隐藏图片');
+                    img.style.display = 'none';
+                    return;
+                }
+                
+                const testPath = possiblePaths[currentIndex];
+                const testImg = new Image();
+                
+                testImg.onload = () => {
+                    img.src = testPath;
+                    img.onerror = null; // 成功后清除错误处理
+                    console.log('图片加载成功:', testPath);
+                };
+                
+                testImg.onerror = () => {
+                    currentIndex++;
+                    tryNextPath();
+                };
+                
+                testImg.src = testPath + (testPath.includes('?') ? '&' : '?') + 't=' + Date.now();
+            };
+            
+            tryNextPath();
+        }
+
+        // 修复媒体 URL 路径（根据类型选择正确的目录）
+        function fixMediaUrl(url, type = 'image') {
+            if (!url) return '';
+            
+            // 如果已经是完整 URL，检查是否需要修复路径
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                // 修复错误的域名
+                if (url.includes('www.1101020.xyz')) {
+                    url = url.replace('www.1101020.xyz', 'upload.1101020.xyz');
+                }
+                
+                // 修复错误的路径
+                if (url.includes('/babyimage/')) {
+                    // 根据类型选择目录
+                    if (type === 'video') {
+                        url = url.replace('/babyimage/', '/uploads/videos/');
+                    } else {
+                        url = url.replace('/babyimage/', '/uploads/images/');
+                    }
+                } else if (url.includes('/uploads/') && !url.includes('/uploads/images/') && !url.includes('/uploads/videos/')) {
+                    // 如果只有 /uploads/ 没有子目录，根据类型添加
+                    if (type === 'video') {
+                        url = url.replace('/uploads/', '/uploads/videos/');
+                    } else {
+                        url = url.replace('/uploads/', '/uploads/images/');
+                    }
+                }
+                
+                return url;
+            }
+            
+            // 相对路径处理
+            let cleanPath = url.replace(/^\.?\//, '');
+            
+            // 修复 babyimage 路径
+            if (cleanPath.startsWith('babyimage/')) {
+                cleanPath = cleanPath.replace(/^babyimage\//, '');
+            }
+            
+            // 根据类型选择基础路径
+            const basePath = type === 'video' ? VIDEOS_BASE_PATH : IMAGES_BASE_PATH;
+            
+            // 移除可能的前缀
+            cleanPath = cleanPath.replace(/^(uploads\/|images\/|videos\/)/, '');
+            
+            return basePath + cleanPath;
+        }
+
+        // 初始化粒子特效
+        function initParticles() {
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS('particles-js', {
+                    particles: {
+                        number: { value: 50, density: { enable: true, value_area: 800 } },
+                        color: { value: '#ffffff' },
+                        shape: { type: 'circle' },
+                        opacity: { value: 0.3, random: true },
+                        size: { value: 3, random: true },
+                        line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.2, width: 1 },
+                        move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+                    },
+                    interactivity: {
+                        detect_on: 'canvas',
+                        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                        modes: { grab: { distance: 400, line_linked: { opacity: 1 } }, bubble: { distance: 400, size: 40, duration: 2, opacity: 8, speed: 3 }, repulse: { distance: 200, duration: 0.4 }, push: { particles_nb: 4 }, remove: { particles_nb: 2 } }
+                    },
+                    retina_detect: true
+                });
+            }
+        }
+        
         // 初始化
         loadData();
+        
+        // 页面加载完成后初始化粒子
+        window.addEventListener('load', function() {
+            setTimeout(initParticles, 500);
+        });
+        
+        // 点击页面其他地方隐藏固定栏
+        document.addEventListener('click', function(e) {
+            const actionBar = document.getElementById('fixedActionBar');
+            const modal = document.getElementById('commentModal');
+            if (actionBar && !actionBar.contains(e.target) && !modal.contains(e.target) && !e.target.closest('.card')) {
+                hideFixedActionBar();
+            }
+        });
 
-        function loadData() {
-            // 防止缓存
-            fetch(API_URL + "?action=list&t=" + new Date().getTime(), { mode: 'cors', cache: 'no-store' })
-            .then(res => res.json())
+        // 数据缓存（5分钟）
+        let dataCache = null;
+        let cacheTime = 0;
+        const CACHE_DURATION = 5 * 60 * 1000; // 5分钟
+        
+        function loadData(forceRefresh = false) {
+            // 检查缓存
+            if (!forceRefresh && dataCache && (Date.now() - cacheTime < CACHE_DURATION)) {
+                console.log('使用缓存数据');
+                processData(dataCache);
+                return;
+            }
+            
+            // 防止缓存，添加超时处理
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+            
+            fetch(API_URL + "?action=list&t=" + new Date().getTime(), { 
+                mode: 'cors', 
+                cache: 'no-store',
+                signal: controller.signal
+            })
+            .then(res => {
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json();
+            })
             .then(data => {
-                if (data.success) {
-                    allVideos = data.videos;
-                    allImages = data.images;
+                console.log('API 返回的原始数据:', data);
+                
+                // 更新缓存
+                dataCache = data;
+                cacheTime = Date.now();
+                
+                processData(data);
+            })
+            .catch(err => {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    console.log("Request timeout");
+                } else {
+                    console.log("Network error", err);
+                }
+            });
+        }
+        
+        function processData(data) {
+            if (data.success) {
+                    // 修复所有媒体文件的 URL 路径（根据类型）
+                    allVideos = (data.videos || []).map(item => {
+                        const fixedItem = {
+                            ...item,
+                            originalUrl: item.url, // 保存原始 URL 用于调试
+                            url: fixMediaUrl(item.url, 'video')
+                        };
+                        return fixedItem;
+                    });
+                    allImages = (data.images || []).map(item => {
+                        const fixedItem = {
+                            ...item,
+                            originalUrl: item.url, // 保存原始 URL 用于调试
+                            url: fixMediaUrl(item.url, 'image')
+                        };
+                        return fixedItem;
+                    });
+                    
+                    console.log('加载的视频:', allVideos.length, '个');
+                    console.log('加载的图片:', allImages.length, '个');
+                    
+                    // 如果没有数据，显示提示
+                    if (allVideos.length === 0 && allImages.length === 0) {
+                        console.warn('警告: API 返回了成功状态，但没有视频和图片数据');
+                        const videoGrid = document.getElementById('videoGrid');
+                        const imageGrid = document.getElementById('imageGrid');
+                        if (videoGrid && videoGrid.children.length === 0) {
+                            videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无视频</div>';
+                        }
+                        if (imageGrid && imageGrid.children.length === 0) {
+                            imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">暂无图片</div>';
+                        }
+                    }
                     
                     // 初次渲染
                     renderBatch('videoGrid', allVideos, 1);
                     renderBatch('imageGrid', allImages, 1);
                     
-                    // 检查是否需要显示“加载更多”
+                    // 检查是否需要显示"加载更多"
                     updateLoadMoreBtn();
                 } else {
                     console.error("Server error:", data.message);
+                    // 显示错误提示
+                    const videoGrid = document.getElementById('videoGrid');
+                    const imageGrid = document.getElementById('imageGrid');
+                    if (videoGrid) videoGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data.message || '未知错误') + '</div>';
+                    if (imageGrid) imageGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ff4757;">加载失败: ' + (data.message || '未知错误') + '</div>';
                 }
-            })
-            .catch(err => {
-                // 静默失败，或者只在 console 报错，以免影响 UI 美观
-                console.log("Network error", err);
-            });
         }
 
         // 批量渲染函数 (实现伪分页)
@@ -371,29 +1040,68 @@
                 
                 // 媒体HTML生成
                 let mediaHtml = '';
+                // 确保 URL 已修复（根据类型）
+                const mediaUrl = fixMediaUrl(item.url, item.type);
+                
                 if (item.type === 'video') {
+                    // 视频：生成封面图
+                    // 优先使用独立封面图，否则使用 video 元素提取第一帧
+                    let thumbnailUrl = '';
+                    let hasThumbnail = false;
+                    const videoId = 'video-thumb-' + item.id;
+                    
+                    if (item.thumbnail || item.thumb) {
+                        // 如果有独立的封面图
+                        thumbnailUrl = fixMediaUrl(item.thumbnail || item.thumb, item.type);
+                        hasThumbnail = true;
+                    } else {
+                        // 默认尝试显示封面（使用 video 元素提取）
+                        hasThumbnail = true;
+                    }
+                    
                     // 视频：使用漂亮的占位符 + 播放按钮
                     mediaHtml = `
-                        <a href="${item.url}" data-fancybox="gallery" class="media-box">
-                            <div class="video-placeholder ${item.has_thumb ? 'has-thumb' : ''}">
-                                <img src="${item.url}#t=0.1" style="opacity:${item.has_thumb?1:0.6};" onerror="this.style.display='none'">
-                                <div style="position:absolute; z-index:2;">
+                        <a href="${mediaUrl}" data-fancybox="gallery" data-type="video" class="media-box">
+                            <div class="video-placeholder ${hasThumbnail ? 'has-thumb' : ''}">
+                                ${hasThumbnail ? `
+                                ${thumbnailUrl ? `
+                                <img src="${thumbnailUrl}" 
+                                     alt="视频封面" 
+                                     class="video-thumb-img"
+                                     loading="lazy"
+                                     onerror="handleVideoThumbError(this, '${mediaUrl}');">` : `
+                                <video class="video-thumb-source" 
+                                       style="display:none;"
+                                       preload="metadata"
+                                       data-video-url="${mediaUrl}"
+                                       data-thumb-id="${videoId}">
+                                    <source src="${mediaUrl}" type="video/mp4">
+                                </video>
+                                <img class="video-thumb-img" 
+                                     id="${videoId}"
+                                     alt="视频封面" 
+                                     style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:1; opacity:0;"
+                                     onerror="handleVideoThumbError(this, '${mediaUrl}');">`}
+                                ` : ''}
+                                <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; display:flex; align-items:center; justify-content:center; background:${hasThumbnail ? 'rgba(0,0,0,0.3)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};">
                                     <span class="play-icon">▶</span>
                                 </div>
                             </div>
                         </a>`;
                 } else {
-                    // 图片
+                    // 图片（添加错误处理和路径修复，解决手机端加载问题）
                     mediaHtml = `
-                        <a href="${item.url}" data-fancybox="gallery" class="media-box">
-                            <img src="${item.url}" loading="lazy">
+                        <a href="${mediaUrl}" data-fancybox="gallery" class="media-box">
+                            <img src="${mediaUrl}" loading="lazy" 
+                                 onerror="handleImageError(this, '${mediaUrl}');">
                         </a>`;
                 }
 
-                // 评论HTML
+                // 评论HTML（显示最新评论，可点击查看全部）
                 let commentHtml = '';
                 if (item.comments && item.comments.length > 0) {
-                    commentHtml = `<div class="comment-preview">"${item.comments[0].content}"</div>`;
+                    const latestComment = item.comments[0];
+                    commentHtml = `<div class="comment-preview" onclick="showCommentList(${item.id})" style="cursor:pointer;">"${latestComment.content}"</div>`;
                 }
 
                 div.innerHTML = `
@@ -401,18 +1109,124 @@
                     <button class="btn-admin-pin" onclick="togglePin(${item.id})">📌</button>
                     ${mediaHtml}
                     <div class="card-footer">
-                        <button class="btn-action ${localStorage.getItem('liked_'+item.id)?'liked':''}" onclick="likeItem(${item.id}, this)">
-                            <span class="icon">♥</span>
-                            <span class="count">${item.likes || 0}</span>
-                        </button>
-                        <button class="btn-action" onclick="commentItem(${item.id})">
-                            <span class="icon">💬</span> 评论
-                        </button>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span>♥</span>
+                                <span>${item.likes || 0}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>💬</span>
+                                <span>${item.comments ? item.comments.length : 0}</span>
+                            </div>
+                        </div>
                     </div>
                     ${commentHtml}
                 `;
+                div.setAttribute('data-item-id', item.id);
+                div.setAttribute('data-item-type', item.type);
+                
+                // 点击卡片显示固定操作栏
+                div.addEventListener('click', function(e) {
+                    // 如果点击的是媒体链接，不触发
+                    if (e.target.closest('a')) return;
+                    showFixedActionBar(item.id, item.type);
+                });
+                
                 container.appendChild(div);
+                
+                // 如果是视频且没有独立封面图，立即尝试提取封面
+                if (item.type === 'video' && !item.thumbnail && !item.thumb) {
+                    const videoThumbImg = div.querySelector('.video-thumb-img');
+                    const videoThumbSource = div.querySelector('.video-thumb-source');
+                    if (videoThumbImg && videoThumbSource) {
+                        // 延迟一点执行，确保 DOM 已渲染
+                        setTimeout(() => {
+                            extractVideoThumbnailFromElement(videoThumbSource, videoThumbImg, mediaUrl);
+                        }, 100);
+                    }
+                }
             });
+        }
+        
+        // 从 video 元素提取封面
+        function extractVideoThumbnailFromElement(videoElement, imgElement, videoUrl) {
+            if (!videoElement || !imgElement) return;
+            
+            const video = videoElement;
+            let extracted = false;
+            let timeoutId = null;
+            
+            // 设置跨域属性（如果需要）
+            video.crossOrigin = 'anonymous';
+            video.muted = true; // 静音以允许自动播放
+            video.playsInline = true;
+            
+            const extractFrame = () => {
+                if (extracted) return;
+                extracted = true;
+                
+                // 清除超时
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+                
+                try {
+                    if (video.videoWidth === 0 || video.videoHeight === 0) {
+                        throw new Error('视频尺寸为0');
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    imgElement.src = thumbnailUrl;
+                    imgElement.style.opacity = '1';
+                    imgElement.style.transition = 'opacity 0.3s ease';
+                    console.log('成功从视频提取封面:', videoUrl);
+                } catch (e) {
+                    console.warn('提取视频封面失败 (可能是跨域问题):', e);
+                    // 如果提取失败（可能是跨域），尝试其他方法
+                    handleVideoThumbError(imgElement, videoUrl);
+                }
+            };
+            
+            video.onloadedmetadata = () => {
+                // 跳转到第0.5秒获取帧
+                if (video.duration > 0.5) {
+                    video.currentTime = 0.5;
+                } else if (video.duration > 0) {
+                    video.currentTime = video.duration / 2;
+                } else {
+                    video.currentTime = 0.1;
+                }
+            };
+            
+            video.onseeked = () => {
+                extractFrame();
+            };
+            
+            video.onerror = (e) => {
+                console.warn('视频加载失败，尝试其他方法:', videoUrl, e);
+                if (timeoutId) clearTimeout(timeoutId);
+                extracted = true;
+                handleVideoThumbError(imgElement, videoUrl);
+            };
+            
+            // 设置超时，如果8秒内无法提取，使用备用方法
+            timeoutId = setTimeout(() => {
+                if (!extracted) {
+                    console.warn('视频封面提取超时，使用备用方法');
+                    extracted = true;
+                    handleVideoThumbError(imgElement, videoUrl);
+                }
+            }, 8000);
+            
+            // 开始加载视频
+            video.load();
         }
 
         function showMoreVideos() {
@@ -437,31 +1251,223 @@
             if (imagePage * PAGE_SIZE < allImages.length) iBtn.style.display = 'block';
             else iBtn.style.display = 'none';
         }
+        
 
-        // --- 交互逻辑 (和之前一样) ---
-        window.likeItem = function(id, btn) {
-            if (localStorage.getItem('liked_' + id)) return;
-            fetch(API_URL + "?action=like", { method: 'POST', body: JSON.stringify({ id: id }) })
-            .then(res => res.json())
-            .then(data => {
+        // --- 交互逻辑（支持多次点赞） ---
+        let currentItemId = null;
+        let currentItemType = null; // 'image' or 'video'
+        
+        // 显示/隐藏固定操作栏
+        function showFixedActionBar(itemId, itemType) {
+            currentItemId = itemId;
+            currentItemType = itemType;
+            const actionBar = document.getElementById('fixedActionBar');
+            actionBar.style.display = 'flex';
+            
+            // 更新统计数据
+            updateFixedBarStats();
+        }
+        
+        function hideFixedActionBar() {
+            const actionBar = document.getElementById('fixedActionBar');
+            actionBar.style.display = 'none';
+            currentItemId = null;
+            currentItemType = null;
+        }
+        
+        // 更新固定栏统计数据
+        function updateFixedBarStats() {
+            if (!currentItemId) return;
+            
+            const allItems = [...allVideos, ...allImages];
+            const item = allItems.find(i => i.id == currentItemId);
+            if (item) {
+                document.getElementById('likeCount').textContent = item.likes || 0;
+                document.getElementById('commentCount').textContent = item.comments ? item.comments.length : 0;
+            }
+        }
+        
+        // 固定栏点赞功能（支持多次点赞）
+        async function handleFixedLike() {
+            if (!currentItemId) return;
+            
+            const btn = document.getElementById('fixedLikeBtn');
+            btn.classList.add('active');
+            
+            // 创建多样化点赞特效
+            createDiverseLikeEffects(btn);
+            
+            try {
+                const res = await fetch(API_URL + "?action=like", { 
+                    method: 'POST', 
+                    body: JSON.stringify({ id: currentItemId }) 
+                });
+                const data = await res.json();
+                
                 if (data.success) {
-                    localStorage.setItem('liked_' + id, '1');
-                    btn.classList.add('liked');
-                    const countSpan = btn.querySelector('.count');
-                    countSpan.innerText = parseInt(countSpan.innerText) + 1;
+                    // 更新数量
+                    document.getElementById('likeCount').textContent = data.likes;
+                    
+                    // 更新本地数据
+                    const allItems = [...allVideos, ...allImages];
+                    const item = allItems.find(i => i.id == currentItemId);
+                    if (item) {
+                        item.likes = data.likes;
+                        // 更新卡片显示
+                        updateCardStats(currentItemId, data.likes, item.comments ? item.comments.length : 0);
+                    }
+                }
+            } catch (e) {
+                console.error('点赞失败:', e);
+            }
+            
+            setTimeout(() => {
+                btn.classList.remove('active');
+            }, 600);
+        }
+        
+        // 固定栏评论功能
+        function handleFixedComment() {
+            if (!currentItemId) return;
+            commentItem(currentItemId);
+        }
+        
+        // 显示评论列表
+        window.showCommentList = function(itemId) {
+            const allItems = [...allVideos, ...allImages];
+            const item = allItems.find(i => i.id == itemId);
+            if (item && item.comments && item.comments.length > 0) {
+                showFixedActionBar(itemId, item.type);
+                // 可以在这里扩展显示评论列表的功能
+            }
+        };
+        
+        // 创建多样化点赞特效
+        function createDiverseLikeEffects(btn) {
+            const emojis = ['❤️', '💖', '💕', '💗', '💓', '💝', '✨', '⭐'];
+            const btnRect = btn.getBoundingClientRect();
+            const centerX = btnRect.left + btnRect.width / 2;
+            const centerY = btnRect.top + btnRect.height / 2;
+            
+            // 创建多个粒子
+            for (let i = 0; i < 8; i++) {
+                const effect = document.createElement('div');
+                effect.className = 'like-particle';
+                effect.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                const angle = (Math.PI * 2 * i) / 8;
+                const distance = 80 + Math.random() * 40;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                const rot = (Math.random() - 0.5) * 720;
+                
+                effect.style.left = centerX + 'px';
+                effect.style.top = centerY + 'px';
+                effect.style.setProperty('--tx', tx + 'px');
+                effect.style.setProperty('--ty', ty + 'px');
+                effect.style.setProperty('--rot', rot + 'deg');
+                
+                document.body.appendChild(effect);
+                
+                setTimeout(() => {
+                    effect.remove();
+                }, 1500);
+            }
+        }
+        
+        // 更新卡片统计数据
+        function updateCardStats(itemId, likes, comments) {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const cardId = card.getAttribute('data-item-id');
+                if (cardId == itemId) {
+                    const stats = card.querySelectorAll('.stat-item span');
+                    if (stats.length >= 2) {
+                        stats[1].textContent = likes;
+                    }
+                    if (stats.length >= 4) {
+                        stats[3].textContent = comments;
+                    }
                 }
             });
-        };
-
+        }
+        
+        // 评论功能（现代化弹窗）
         window.commentItem = function(id) {
-            const content = prompt("写下您的祝福：");
-            if (!content) return;
-            fetch(API_URL + "?action=comment", { method: 'POST', body: JSON.stringify({ id: id, content: content }) })
-            .then(res => res.json())
-            .then(data => { 
-                if(data.success) { alert('评论成功'); loadData(); } 
-            });
+            currentCommentItemId = id;
+            document.getElementById('commentModal').classList.add('active');
+            document.getElementById('commentTextarea').focus();
         };
+        
+        function closeCommentModal() {
+            document.getElementById('commentModal').classList.remove('active');
+            document.getElementById('commentTextarea').value = '';
+            currentCommentItemId = null;
+        }
+        
+        // 提交评论
+        document.getElementById('commentSubmitBtn').addEventListener('click', async function() {
+            const content = document.getElementById('commentTextarea').value.trim();
+            if (!content || !currentCommentItemId) return;
+            
+            this.disabled = true;
+            this.textContent = '发送中...';
+            
+            try {
+                const res = await fetch(API_URL + "?action=comment", { 
+                    method: 'POST', 
+                    body: JSON.stringify({ id: currentCommentItemId, content: content }) 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    closeCommentModal();
+                    // 重新加载数据并更新固定栏
+                    loadData(true);
+                    if (currentItemId) {
+                        setTimeout(updateFixedBarStats, 500);
+                    }
+                } else {
+                    alert('评论失败，请重试');
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            } finally {
+                this.disabled = false;
+                this.textContent = '发送';
+            }
+        });
+        
+        // 删除评论功能（在评论弹窗中显示）
+        window.deleteComment = async function(commentId) {
+            if (!confirm('确定要删除这条评论吗？')) return;
+            
+            try {
+                const res = await fetch(API_URL + "?action=delete_comment", { 
+                    method: 'POST', 
+                    body: JSON.stringify({ comment_id: commentId }) 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    loadData(true);
+                    if (currentItemId) {
+                        setTimeout(updateFixedBarStats, 500);
+                    }
+                } else {
+                    alert('删除失败');
+                }
+            } catch (e) {
+                alert('网络错误');
+            }
+        };
+        
+        // 点击弹窗外部关闭
+        document.getElementById('commentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCommentModal();
+            }
+        });
 
         window.togglePin = function(id) {
             const pwd = prompt("管理密码：");
@@ -475,22 +1481,73 @@
         let clickCount = 0;
         let clickTimer = null;
         
-        // 上传控件
+        // 批量上传控件
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*,video/*';
+        fileInput.multiple = true; // 支持多选
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
-        fileInput.onchange = function(e) {
-            const file = e.target.files[0];
-            if(!file) return;
+        
+        fileInput.onchange = async function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            // 显示上传进度
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressContent = document.getElementById('uploadProgressContent');
+            progressDiv.classList.add('active');
+            progressContent.innerHTML = '';
+            
+            // 创建进度项
+            const progressItems = {};
+            files.forEach((file, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'upload-progress-item';
+                itemDiv.innerHTML = `
+                    <span>${file.name}</span>
+                    <div class="upload-progress-bar">
+                        <div class="upload-progress-fill" style="width: 0%" id="progress-${index}"></div>
+                    </div>
+                `;
+                progressContent.appendChild(itemDiv);
+                progressItems[index] = itemDiv.querySelector('.upload-progress-fill');
+            });
+            
+            // 批量上传（PHP 接收多个文件的方式）
             const formData = new FormData();
-            formData.append('file', file);
-            document.getElementById('secretTitle').innerText = "上传中...";
-            fetch(API_URL + "?action=upload", { method: 'POST', body: formData })
-            .then(res => res.json())
-            .then(data => { alert('上传成功'); loadData(); })
-            .finally(() => document.getElementById('secretTitle').innerText = "屹琛 · 成长时光轴");
+            files.forEach((file, index) => {
+                // PHP 接收多文件时使用 file[0], file[1] 或直接使用 file
+                formData.append('file[' + index + ']', file);
+            });
+            
+            try {
+                const res = await fetch(API_URL + "?action=upload", { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // 更新进度
+                    files.forEach((file, index) => {
+                        if (progressItems[index]) {
+                            progressItems[index].style.width = '100%';
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        progressDiv.classList.remove('active');
+                        loadData();
+                    }, 1000);
+                } else {
+                    alert('上传失败: ' + (data.message || '未知错误'));
+                    progressDiv.classList.remove('active');
+                }
+            } catch (e) {
+                alert('上传失败: ' + e.message);
+                progressDiv.classList.remove('active');
+            }
         };
 
         function checkSecretTrigger() {
