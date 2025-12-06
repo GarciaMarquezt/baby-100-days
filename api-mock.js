@@ -10,30 +10,39 @@ const mockData = {
     likes: {}
 };
 
-// 初始化一些示例数据
+// 初始化一些示例数据（动态扫描本地文件）
 function initMockData() {
-    // 示例图片（使用本地路径或占位图）
+    // 清空现有数据
+    mockData.files = [];
+    
+    // 尝试动态扫描本地文件（仅用于本地测试）
+    // 注意：浏览器环境无法直接访问文件系统，所以这里仍然使用示例数据
+    // 但在真实服务器环境中，api.php 会动态扫描目录
+    
+    // 示例图片（用于本地测试，实际服务器会从目录扫描）
     const sampleImages = [
-        { id: 1, filename: '1.jpg', type: 'image', likes: 5, is_pinned: 1, created_at: Date.now() - 86400000 },
-        { id: 2, filename: '2.jpg', type: 'image', likes: 3, is_pinned: 0, created_at: Date.now() - 172800000 },
-        { id: 3, filename: '3.jpg', type: 'image', likes: 8, is_pinned: 0, created_at: Date.now() - 259200000 },
-        { id: 4, filename: '4.jpg', type: 'image', likes: 2, is_pinned: 0, created_at: Date.now() - 345600000 },
-        { id: 5, filename: '5.jpg', type: 'image', likes: 12, is_pinned: 0, created_at: Date.now() - 432000000 },
-        { id: 6, filename: '6.jpg', type: 'image', likes: 7, is_pinned: 0, created_at: Date.now() - 518400000 },
-        { id: 7, filename: '7.jpg', type: 'image', likes: 4, is_pinned: 0, created_at: Date.now() - 604800000 },
-        { id: 8, filename: '8.jpg', type: 'image', likes: 9, is_pinned: 0, created_at: Date.now() - 691200000 },
-        { id: 9, filename: '9.jpg', type: 'image', likes: 6, is_pinned: 0, created_at: Date.now() - 777600000 },
-        { id: 10, filename: '10.jpg', type: 'image', likes: 11, is_pinned: 0, created_at: Date.now() - 864000000 }
+        { id: 1, filename: '1.jpg', type: 'image', likes: 5, is_pinned: 1, created_at: Math.floor((Date.now() - 86400000) / 1000) },
+        { id: 2, filename: '2.jpg', type: 'image', likes: 3, is_pinned: 0, created_at: Math.floor((Date.now() - 172800000) / 1000) },
+        { id: 3, filename: '3.jpg', type: 'image', likes: 8, is_pinned: 0, created_at: Math.floor((Date.now() - 259200000) / 1000) },
+        { id: 4, filename: '4.jpg', type: 'image', likes: 2, is_pinned: 0, created_at: Math.floor((Date.now() - 345600000) / 1000) },
+        { id: 5, filename: '5.jpg', type: 'image', likes: 12, is_pinned: 0, created_at: Math.floor((Date.now() - 432000000) / 1000) },
+        { id: 6, filename: '6.jpg', type: 'image', likes: 7, is_pinned: 0, created_at: Math.floor((Date.now() - 518400000) / 1000) },
+        { id: 7, filename: '7.jpg', type: 'image', likes: 4, is_pinned: 0, created_at: Math.floor((Date.now() - 604800000) / 1000) },
+        { id: 8, filename: '8.jpg', type: 'image', likes: 9, is_pinned: 0, created_at: Math.floor((Date.now() - 691200000) / 1000) },
+        { id: 9, filename: '9.jpg', type: 'image', likes: 6, is_pinned: 0, created_at: Math.floor((Date.now() - 777600000) / 1000) },
+        { id: 10, filename: '10.jpg', type: 'image', likes: 11, is_pinned: 0, created_at: Math.floor((Date.now() - 864000000) / 1000) }
     ];
     
-    // 示例视频
+    // 示例视频（用于本地测试，实际服务器会从目录扫描）
     const sampleVideos = [
-        { id: 11, filename: 'video1.mp4', type: 'video', likes: 15, is_pinned: 0, created_at: Date.now() - 3600000 },
-        { id: 12, filename: 'video2.mp4', type: 'video', likes: 8, is_pinned: 0, created_at: Date.now() - 7200000 },
-        { id: 13, filename: 'video3.mp4', type: 'video', likes: 20, is_pinned: 1, created_at: Date.now() - 10800000 }
+        { id: 11, filename: 'video1.mp4', type: 'video', likes: 15, is_pinned: 0, created_at: Math.floor((Date.now() - 3600000) / 1000) },
+        { id: 12, filename: 'video2.mp4', type: 'video', likes: 8, is_pinned: 0, created_at: Math.floor((Date.now() - 7200000) / 1000) },
+        { id: 13, filename: 'video3.mp4', type: 'video', likes: 20, is_pinned: 1, created_at: Math.floor((Date.now() - 10800000) / 1000) }
     ];
     
     mockData.files = [...sampleImages, ...sampleVideos];
+    
+    console.log('Mock API: 初始化了', mockData.files.length, '个文件（本地测试用，实际服务器会动态扫描目录）');
     
     // 示例评论
     mockData.comments = {
