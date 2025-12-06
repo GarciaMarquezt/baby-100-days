@@ -3,14 +3,17 @@
     --text-dark: #2c3e50;
     --text-light: #95a5a6;
     --bg-gradient: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+    --accent-red: #c0392b;
+    --accent-gold: #f39c12;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: 'Noto Serif SC', serif;
-    background: var(--bg-gradient);
-    color: var(--text-dark);
+    background: #0a0a0a;
+    color: #fff;
     overflow-x: hidden;
+    position: relative;
 }
 
 #particleCanvas {
@@ -29,95 +32,493 @@ body {
 .music-control.playing .bar-3 { animation: dance 0.6s infinite alternate; }
 @keyframes dance { from { height: 5px; } to { height: 20px; } }
 
-/* 第一屏 Hero */
+/* 第一屏 Hero - FIFA风格立体设计 */
 .hero-section {
-    height: 100vh; position: relative; display: flex; align-items: center; justify-content: center;
+    height: 100vh; 
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
     overflow: hidden;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
 }
+
 .hero-bg {
-    position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
-    background: url('https://www.transparenttextures.com/patterns/cubes.png');
-    opacity: 0.1; z-index: -1;
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(192, 57, 43, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(243, 156, 18, 0.1) 0%, transparent 50%);
+    z-index: 0;
+    animation: bgPulse 8s ease-in-out infinite;
+}
+
+@keyframes bgPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 .hero-content {
-    position: relative; z-index: 1; width: 100%; max-width: 600px; height: 80%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; 
+    z-index: 1; 
+    width: 100%; 
+    max-width: 1200px; 
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 0 5%;
+    gap: 5%;
 }
 
-/* 竖排日期 */
+@media (max-width: 900px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+/* 左侧信息区 - FIFA风格 */
+.hero-left {
+    position: relative;
+    z-index: 2;
+}
+
 .vertical-text {
-    position: absolute; top: 50px; right: 20px; writing-mode: vertical-rl;
-    font-family: 'Ma Shan Zheng', cursive; font-size: 1.2rem; color: var(--primary); letter-spacing: 5px;
-    border-right: 1px solid var(--primary); padding-right: 10px;
+    writing-mode: vertical-rl;
+    font-family: 'Ma Shan Zheng', cursive; 
+    font-size: 2rem; 
+    color: rgba(255, 255, 255, 0.9); 
+    letter-spacing: 8px;
+    margin-bottom: 40px;
+    text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
+    transform: translateX(-20px);
+    opacity: 0;
+    animation: slideInLeft 1s ease 0.5s forwards;
 }
 
-/* 主视觉图 */
+@keyframes slideInLeft {
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* 大标题 - 立体效果 */
+.hero-title-large {
+    font-size: 8rem;
+    font-weight: 900;
+    line-height: 0.9;
+    color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    transform: translateY(-50%);
+    z-index: 0;
+    white-space: nowrap;
+    font-family: 'Arial Black', sans-serif;
+    letter-spacing: -5px;
+    pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .hero-title-large {
+        font-size: 4rem;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* 主视觉图 - 3D立体效果 */
 .main-visual {
-    position: relative; width: 260px; height: 380px; margin-bottom: 40px;
+    position: relative; 
+    width: 100%; 
+    max-width: 500px; 
+    height: 600px;
+    margin: 0 auto;
+    perspective: 1000px;
 }
+
 .image-mask {
-    width: 100%; height: 100%; border-radius: 150px 150px 0 0; overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-    position: relative; z-index: 2;
+    width: 100%; 
+    height: 100%; 
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+    transform-style: preserve-3d;
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.1),
+        inset 0 0 50px rgba(192, 57, 43, 0.2);
+    transition: transform 0.3s ease;
 }
-.hero-img { width: 100%; height: 100%; object-fit: cover; }
 
+.image-mask::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(192, 57, 43, 0.1) 0%, transparent 50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hero-img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover;
+    transform: scale(1.05);
+    transition: transform 0.5s ease;
+}
+
+.main-visual:hover .hero-img {
+    transform: scale(1.1);
+}
+
+.main-visual:hover .image-mask {
+    transform: translateY(-10px) rotateX(5deg);
+}
+
+/* 装饰元素 - 立体光效 */
 .floating-deco {
-    position: absolute; border-radius: 50%; z-index: 1;
+    position: absolute; 
+    border-radius: 50%; 
+    z-index: 1;
+    filter: blur(40px);
+    opacity: 0.6;
+    animation: float 6s ease-in-out infinite;
 }
-.deco-1 { width: 100px; height: 100px; background: #ffeaa7; top: -30px; left: -40px; opacity: 0.5; }
-.deco-2 { width: 80px; height: 80px; background: #ff7675; bottom: -20px; right: -30px; opacity: 0.3; }
 
-/* 标题块 */
-.title-block { text-align: center; position: relative; z-index: 3; }
-.sub { font-size: 0.8rem; letter-spacing: 5px; color: var(--text-light); margin-bottom: 5px; text-transform: uppercase; }
-.main { font-family: 'Ma Shan Zheng', cursive; font-size: 3.5rem; color: var(--primary); margin: 0; line-height: 1; }
-.names { margin-top: 10px; font-weight: bold; letter-spacing: 2px; font-size: 0.9rem; }
+.deco-1 { 
+    width: 200px; 
+    height: 200px; 
+    background: radial-gradient(circle, rgba(192, 57, 43, 0.4), transparent);
+    top: 10%; 
+    left: -10%; 
+}
+
+.deco-2 { 
+    width: 150px; 
+    height: 150px; 
+    background: radial-gradient(circle, rgba(243, 156, 18, 0.3), transparent);
+    bottom: 10%; 
+    right: -5%; 
+    animation-delay: -3s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(20px, -30px) scale(1.1); }
+}
+
+/* 标题块 - 右侧内容区 */
+.title-block { 
+    text-align: left; 
+    position: relative; 
+    z-index: 3;
+    padding-left: 40px;
+}
+
+@media (max-width: 900px) {
+    .title-block {
+        text-align: center;
+        padding-left: 0;
+    }
+}
+
+.sub { 
+    font-size: 0.9rem; 
+    letter-spacing: 8px; 
+    color: rgba(255, 255, 255, 0.6); 
+    margin-bottom: 20px; 
+    text-transform: uppercase;
+    font-weight: 300;
+    position: relative;
+    display: inline-block;
+}
+
+.sub::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-red), transparent);
+}
+
+.main { 
+    font-family: 'Ma Shan Zheng', cursive; 
+    font-size: 5rem; 
+    color: #fff; 
+    margin: 20px 0; 
+    line-height: 1.1;
+    text-shadow: 
+        0 0 30px rgba(192, 57, 43, 0.5),
+        0 10px 40px rgba(0,0,0,0.5);
+    position: relative;
+    display: inline-block;
+    transform: translateY(20px);
+    opacity: 0;
+    animation: titleAppear 1s ease 0.8s forwards;
+}
+
+@keyframes titleAppear {
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.names { 
+    margin-top: 30px; 
+    font-weight: 300; 
+    letter-spacing: 4px; 
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.names::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.3);
+}
 
 .scroll-indicator {
-    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-    font-size: 0.7rem; color: var(--text-light); letter-spacing: 2px;
+    position: absolute; 
+    bottom: 50px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 15px;
+    font-size: 0.7rem; 
+    color: rgba(255, 255, 255, 0.6); 
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    z-index: 10;
 }
-.scroll-indicator .line { width: 1px; height: 40px; background: var(--text-light); }
 
-/* 第二屏：杂志排版 */
-.story-section { padding: 80px 20px; background: #fff; }
+.scroll-indicator .line { 
+    width: 1px; 
+    height: 50px; 
+    background: linear-gradient(180deg, rgba(255,255,255,0.6), transparent);
+    position: relative;
+}
+
+.scroll-indicator .line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 5px;
+    height: 10px;
+    background: rgba(255,255,255,0.8);
+    animation: scrollDown 2s infinite;
+}
+
+@keyframes scrollDown {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(40px); opacity: 0; }
+}
+
+/* 统计信息样式 */
+.hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 60px;
+}
+
+.stat-item {
+    text-align: left;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 5px;
+    text-shadow: 0 0 20px rgba(192, 57, 43, 0.5);
+    font-family: 'Arial Black', sans-serif;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .hero-stats {
+        justify-content: center;
+        gap: 20px;
+    }
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/* 第二屏：杂志排版 - 立体分割设计 */
+.story-section { 
+    padding: 120px 5%; 
+    background: #fff;
+    position: relative;
+    clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 100%);
+    margin-top: -5%;
+}
+
 .story-grid {
-    max-width: 800px; margin: 0 auto;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center;
+    max-width: 1400px; 
+    margin: 0 auto;
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 80px; 
+    align-items: center;
 }
-.text-box h3 { font-size: 2rem; font-weight: normal; line-height: 1.4; margin-bottom: 20px; }
-.divider { width: 50px; height: 2px; background: var(--primary); margin: 20px 0; }
-.small { font-size: 0.9rem; color: #7f8c8d; line-height: 1.8; }
 
-.img-box { position: relative; }
-.story-img { width: 100%; border-radius: 4px; position: relative; z-index: 2; box-shadow: 10px 10px 30px rgba(0,0,0,0.1); }
+.text-box {
+    position: relative;
+    z-index: 2;
+}
+
+.text-box h3 { 
+    font-size: 3.5rem; 
+    font-weight: 300; 
+    line-height: 1.2; 
+    margin-bottom: 30px;
+    color: #1a1a2e;
+    position: relative;
+}
+
+.text-box h3::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent-red), var(--accent-gold));
+}
+
+.divider { 
+    width: 80px; 
+    height: 3px; 
+    background: linear-gradient(90deg, var(--accent-red), var(--accent-gold)); 
+    margin: 30px 0; 
+}
+
+.small { 
+    font-size: 1rem; 
+    color: #555; 
+    line-height: 2; 
+    font-weight: 300;
+}
+
+.img-box { 
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.story-img { 
+    width: 100%; 
+    border-radius: 0;
+    position: relative; 
+    z-index: 2; 
+    box-shadow: 
+        30px 30px 60px rgba(0,0,0,0.3),
+        0 0 0 1px rgba(0,0,0,0.1);
+    transform: rotateY(-5deg) rotateX(2deg);
+    transition: transform 0.5s ease;
+}
+
+.img-box:hover .story-img {
+    transform: rotateY(0deg) rotateX(0deg) translateY(-10px);
+}
+
 .img-frame {
-    position: absolute; top: 20px; left: 20px; width: 100%; height: 100%;
-    border: 2px solid var(--primary); z-index: 1;
+    position: absolute; 
+    top: 30px; 
+    left: 30px; 
+    width: 100%; 
+    height: 100%;
+    border: 3px solid var(--accent-red); 
+    z-index: 1;
+    transform: translateZ(-20px);
+    opacity: 0.5;
 }
 
-/* 第三屏：3D卡片 */
-.invite-section { padding: 60px 20px 120px; text-align: center; perspective: 1000px; }
+/* 第三屏：3D卡片 - 高级立体效果 */
+.invite-section { 
+    padding: 120px 5%; 
+    text-align: center; 
+    perspective: 1500px;
+    background: linear-gradient(180deg, #fff 0%, #f8f9fa 100%);
+    position: relative;
+}
+
+.invite-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192, 57, 43, 0.5), transparent);
+}
+
 .card-3d-container {
-    width: 300px; height: 450px; margin: 0 auto; cursor: pointer;
+    width: 400px; 
+    height: 550px; 
+    margin: 0 auto; 
+    cursor: pointer;
+    perspective: 1500px;
+    position: relative;
 }
+
 .card-3d {
-    position: relative; width: 100%; height: 100%; text-align: center;
-    transition: transform 0.8s; transform-style: preserve-3d;
-    border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+    transform-style: preserve-3d;
+    border-radius: 20px;
 }
-.card-3d-container.flipped .card-3d { transform: rotateY(180deg); }
+
+.card-3d-container.flipped .card-3d { 
+    transform: rotateY(180deg) scale(1.05);
+}
+
+.card-3d-container:hover .card-3d:not(.flipped) {
+    transform: translateY(-20px) rotateX(5deg);
+}
 
 .card-front, .card-back {
-    position: absolute; width: 100%; height: 100%;
-    -webkit-backface-visibility: hidden; backface-visibility: hidden;
-    border-radius: 15px; padding: 30px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: #fff;
-    background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+    position: absolute; 
+    width: 100%; 
+    height: 100%;
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    border-radius: 20px; 
+    padding: 40px;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.3),
+        0 0 0 1px rgba(255,255,255,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 /* 正面 */
