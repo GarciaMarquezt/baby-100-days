@@ -201,8 +201,11 @@
         function fixImagePath(img) {
             if (!img) return;
             
-            const originalSrc = img.getAttribute('data-original') || img.src || img.getAttribute('src');
+            let originalSrc = img.getAttribute('data-original') || img.src || img.getAttribute('src');
             if (!originalSrc) return;
+            
+            // 移除可能存在的 @ 符号（某些情况下可能被添加）
+            originalSrc = originalSrc.replace(/^@+/, '').trim();
             
             // 图片服务器域名（宝塔服务器）
             const IMAGE_SERVER = 'https://upload.1101020.xyz';
@@ -211,6 +214,11 @@
             let convertedSrc = originalSrc;
             if (convertedSrc.includes('babyimage/')) {
                 convertedSrc = convertedSrc.replace(/babyimage\//g, 'uploads/images/');
+            }
+            
+            // 修复错误的域名（www.1101020.xyz -> upload.1101020.xyz）
+            if (convertedSrc.includes('www.1101020.xyz')) {
+                convertedSrc = convertedSrc.replace(/www\.1101020\.xyz/g, 'upload.1101020.xyz');
             }
             
             // 提取文件名
@@ -222,6 +230,8 @@
             if (filename.includes('?')) {
                 filename = filename.split('?')[0];
             }
+            // 移除可能存在的 @ 符号
+            filename = filename.replace(/^@+/, '').trim();
             
             // 构建正确的完整路径（使用宝塔服务器域名）
             const correctPath = IMAGE_SERVER + '/uploads/images/' + filename;
@@ -229,13 +239,11 @@
             // 尝试多种路径格式（解决宝塔面板路径问题）
             const possiblePaths = [
                 correctPath,  // 最优先：使用正确的服务器域名
-                IMAGE_SERVER + '/' + convertedSrc.replace(/^\.?\//, ''),  // 使用服务器域名 + 转换后的路径
-                convertedSrc.startsWith('http') ? convertedSrc.replace('www.1101020.xyz', 'upload.1101020.xyz') : convertedSrc,  // 修复域名
-                originalSrc.startsWith('http') ? originalSrc.replace('www.1101020.xyz', 'upload.1101020.xyz') : originalSrc,  // 修复原始路径的域名
-                './' + convertedSrc.replace(/^\.?\//, ''),  // 相对路径（转换后）
-                '/' + convertedSrc.replace(/^\.?\//, ''),  // 绝对路径（转换后）
-                convertedSrc,  // 转换后的路径
-                originalSrc,  // 原始路径
+                IMAGE_SERVER + '/uploads/images/' + filename,  // 确保使用正确的路径
+                convertedSrc.startsWith('http') ? convertedSrc.replace(/www\.1101020\.xyz/g, 'upload.1101020.xyz') : convertedSrc,  // 修复域名
+                originalSrc.startsWith('http') ? originalSrc.replace(/www\.1101020\.xyz/g, 'upload.1101020.xyz') : originalSrc,  // 修复原始路径的域名
+                './uploads/images/' + filename,  // 相对路径
+                '/uploads/images/' + filename,  // 绝对路径
             ];
             
             // 去重
@@ -252,9 +260,11 @@
                 const testImg = new Image();
                 
                 testImg.onload = () => {
-                    img.src = testPath;
+                    // 确保最终路径没有 @ 符号
+                    const finalPath = testPath.replace(/^@+/, '').trim();
+                    img.src = finalPath;
                     img.onerror = null; // 成功后清除错误处理
-                    console.log('图片加载成功:', testPath);
+                    console.log('图片加载成功:', finalPath);
                 };
                 
                 testImg.onerror = () => {
