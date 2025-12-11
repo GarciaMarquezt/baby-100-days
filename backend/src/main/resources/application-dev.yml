@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    # 注意：如果连接失败，请尝试将端口改为 3360（根据宝塔防火墙规则）
+    # 标准MySQL端口是3306，但宝塔可能配置为3360
+    url: jdbc:mysql://8.138.140.178:3306/baby100_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    # 根据宝塔面板，用户名是 baby100，不是 root
+    username: baby100
+    password: Ypc@970612
+
+app:
+  upload:
+    # 开发环境也上传到服务器（已迁移到网站根目录）
+    dir: /www/wwwroot/baby-web/uploads/
+    # 使用主域名访问，避免子域名SSL证书问题
+    domain: https://1101020.xyz/uploads/
+    sftp:
+      enabled: true
+      host: 8.138.140.178
+      port: 22
+      username: root
+      password: Ypc@970612

@@ -1,0 +1,144 @@
+/* 设计 Tokens - 百日宴 H5 设计系统（新中式中国风） */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* 颜色系统 - 新中式中国风 */
+  --bg: #FAF8F3; /* 米白宣纸色 */
+  --card-bg: #FFFFFF;
+  --text-primary: #2C1810; /* 深棕色文字 */
+  --text-secondary: #6B5B4F; /* 灰棕色 */
+  --accent-start: #C73E1D; /* 朱砂红 */
+  --accent-end: #A82E1A; /* 深朱砂红 */
+  --accent: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  --accent-solid: #C73E1D;
+  --gold: #D4AF37; /* 雅金色 */
+  --gold-light: #E8D5A3; /* 浅金色 */
+  --gold-dark: #B8941F; /* 深金色 */
+  --muted: #F5F1EB; /* 浅米色 */
+  --muted-dark: #E8E3DB; /* 中米色 */
+  
+  /* 边框和分隔符 */
+  --border-color: var(--gold);
+  --divider-color: var(--gold-light);
+  
+  /* 圆角系统 - 新中式 */
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  --radius-full: 9999px;
+  
+  /* 间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  
+  /* 字体系统 - 思源宋体 */
+  --font-family: 'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', serif;
+  --font-family-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-size-h1: 28px;
+  --font-size-h2: 20px;
+  --font-size-body: 16px;
+  --font-size-small: 12px;
+  --font-weight-bold: 700;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  
+  /* 阴影系统 - 柔光阴影 */
+  --shadow-sm: 0 2px 12px rgba(199, 62, 29, 0.08);
+  --shadow-md: 0 4px 20px rgba(199, 62, 29, 0.12);
+  --shadow-lg: 0 8px 32px rgba(199, 62, 29, 0.16);
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.08); /* 简化版本使用 */
+  --shadow-accent: 0 4px 16px rgba(199, 62, 29, 0.2), 0 0 8px rgba(212, 175, 55, 0.3);
+  --shadow-gold: 0 2px 12px rgba(212, 175, 55, 0.2);
+  
+  /* 触控区域 */
+  --touch-target: 44px;
+  
+  /* 安全区域 */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  
+  /* 过渡动画 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Dark Mode - 深色新中式 */
+[data-theme='dark'] {
+  --bg: #1A1612; /* 深棕背景 */
+  --card-bg: #252018;
+  --text-primary: #F5E6D3; /* 米白色文字 */
+  --text-secondary: #B8A890;
+  --muted: #2A241E;
+  --muted-dark: #332D25;
+  --shadow-sm: 0 2px 12px rgba(199, 62, 29, 0.2);
+  --shadow-md: 0 4px 20px rgba(199, 62, 29, 0.3);
+  --shadow-lg: 0 8px 32px rgba(199, 62, 29, 0.4);
+  --shadow-soft: 0 6px 24px rgba(0, 0, 0, 0.6); /* 简化版本使用 - 深色模式 */
+}
+
+/* 全局重置 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-family-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+}
+
+/* 标题使用思源宋体 */
+h1, h2, h3, h4, h5, h6,
+.title, .page-title, .card-title {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-bold);
+}
+
+#app {
+  min-height: 100vh;
+  max-width: 428px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+}
+
+/* 柔光圆形背景 */
+.page-glow {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(60px);
+}
+
+/* 响应式调整 */
+@media (max-width: 360px) {
+  :root {
+    --font-size-h1: 24px;
+    --font-size-h2: 18px;
+    --font-size-body: 14px;
+  }
+}
+
