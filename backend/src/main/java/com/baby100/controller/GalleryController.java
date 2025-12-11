@@ -49,7 +49,7 @@ public class GalleryController {
      */
     @GetMapping("/page")
     public Result<IPage<Gallery>> page(@RequestParam(defaultValue = "1") Integer page,
-                                       @RequestParam(defaultValue = "20") Integer size) {
+                                       @RequestParam(defaultValue = "10") Integer size) {
         Page<Gallery> pageParam = new Page<>(page, size);
         IPage<Gallery> result = galleryService.page(pageParam, new LambdaQueryWrapper<Gallery>()
                 .orderByDesc(Gallery::getSort)

@@ -23,11 +23,18 @@
     <!-- 封面内容 -->
     <div class="home-cover">
       <div class="cover-photo">
-        <img
-          class="cover-photo__image"
-          src="https://upload.1101020.xyz/uploads/images/1.jpg"
-          alt="宝宝照片"
-        />
+        <template v-if="homeCoverUrl">
+          <img
+            class="cover-photo__image"
+            :src="homeCoverUrl"
+            alt="宝宝照片"
+          />
+        </template>
+        <template v-else>
+          <div class="cover-photo__placeholder">
+            宝宝照片
+          </div>
+        </template>
       </div>
       
       <h1 class="cover-title">{{ babyName }} · 百日</h1>
@@ -113,6 +120,7 @@ const { loadConfig, getValue } = useConfig()
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
 const partyDate = computed(() => getValue('party_date', '2026-01-10 12:00'))
 const partyAddress = computed(() => getValue('party_address', '祁阳鑫利大酒店四楼1号会议厅'))
+const homeCoverUrl = computed(() => getValue('home_cover_thumb', '') || getValue('home_cover_image', ''))
 
 // 主题切换
 const isDark = ref(false)
@@ -346,6 +354,18 @@ onUnmounted(() => {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.cover-photo__placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFEFF5, #FFDDEE);
+  color: var(--text-secondary);
+  font-size: 18px;
 }
 
 .cover-title {

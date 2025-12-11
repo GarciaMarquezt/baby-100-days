@@ -7,7 +7,7 @@ export function getGalleryList() {
     })
 }
 
-export function getGalleryPage(page = 1, size = 20) {
+export function getGalleryPage(page = 1, size = 10) {
     return request({
         url: '/gallery/page',
         method: 'get',
@@ -31,10 +31,18 @@ export function pinGallery(id, pinned) {
     })
 }
 
+export function setHomeCover(id) {
+    return request({
+        url: '/admin/gallery/home-cover',
+        method: 'post',
+        params: { id }
+    })
+}
+
 export function deleteGallery(id) {
     return request({
-        url: '/gallery/admin/delete',
-        method: 'delete',
-        params: { id }
+        url: '/admin/gallery/delete',
+        method: 'post',
+        data: { id }
     })
 }

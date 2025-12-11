@@ -48,14 +48,18 @@
           @click="openViewer(index)"
         >
           <div class="gallery-item__image-wrapper">
-            <img 
-              :src="item.imageUrl" 
-              :alt="item.description || '美好瞬间'"
-              loading="lazy"
-              class="gallery-item__image"
-              @error="handleImageError($event, item)"
-              crossorigin="anonymous"
-            />
+          <div v-if="item._fallback" class="gallery-item__placeholder">
+            美好瞬间
+          </div>
+          <img 
+            :src="item.thumbUrl || item.imageUrl" 
+            :alt="item.description || '美好瞬间'"
+            loading="lazy"
+            class="gallery-item__image"
+            @error="handleImageError($event, item)"
+            @load="onImageLoad"
+            crossorigin="anonymous"
+          />
           <button
             v-if="showUploadFab"
             class="gallery-item__pin"
@@ -74,6 +78,20 @@
           </div>
           <div class="gallery-item__footer">
             <div class="gallery-item__desc">{{ item.description || '美好瞬间' }}</div>
+            <button
+              v-if="showUploadFab"
+              class="gallery-item__cover"
+              @click.stop="setAsHomeCover(item)"
+            >
+              设为封面
+            </button>
+            <button
+              v-if="showUploadFab"
+              class="gallery-item__delete"
+              @click.stop="handleDelete(item)"
+            >
+              删除
+            </button>
             <button 
               class="gallery-item__like"
               :class="{ 'gallery-item__like--active': item.isLiked }"
@@ -155,8 +173,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { getGalleryPage, likeGallery, pinGallery } from '../api/gallery'
-import { showToast } from 'vant'
+import { getGalleryPage, likeGallery, pinGallery, setHomeCover, deleteGallery } from '../api/gallery'
+import { showToast, showDialog } from 'vant'
 import BabyButton from '../components/Button.vue'
 import BabyModal from '../components/Modal.vue'
 import ImageViewer from '../components/ImageViewer.vue'
@@ -172,7 +190,7 @@ const viewerIndex = ref(0)
 const showUpload = ref(false)
 const showUploadFab = ref(false)
 const currentPage = ref(1)
-const pageSize = 20
+const pageSize = 9
 const hasMore = ref(true)
 const loadingMore = ref(false)
 
@@ -202,9 +220,35 @@ const togglePin = async (item) => {
   const target = !item.isPinned
   try {
     await pinGallery(item.id, target)
-    showToast(target ? '已置顶到相册前排' : '已取消置顶')
-    await loadPhotos(true)
+
+    // 本地更新排序状态，避免每次都重新请求列表
+    if (target) {
+      // 置顶：本地找一个最大的 sort + 1
+      const maxSort = galleryList.value.reduce(
+        (max, cur) => Math.max(max, cur.sort || 0),
+        0
+      )
+      item.sort = maxSort + 1
+      item.isPinned = true
+    } else {
+      // 取消置顶
+      item.sort = 0
+      item.isPinned = false
+    }
+
+    applyPinSort()
     triggerGalleryAnimation()
+    showToast(target ? '已置顶到相册前排' : '已取消置顶')
+  } catch (e) {
+    // 错误提示已在 request 拦截器中处理
+  }
+}
+
+const setAsHomeCover = async (item) => {
+  if (!item || !item.id) return
+  try {
+    await setHomeCover(item.id)
+    showToast('已设置为首页宝宝照片')
   } catch (e) {
     // 错误提示已在 request 拦截器中处理
   }
@@ -233,6 +277,8 @@ const loadPhotos = async (reset = false) => {
     }
 
     applyPinSort()
+    // 新数据插入后触发淡入动画，让“查看更多”加载的图片可见
+    triggerGalleryAnimation()
 
     const totalPages = res?.pages || 1
     if (currentPage.value >= totalPages || records.length < pageSize) {
@@ -245,6 +291,7 @@ const loadPhotos = async (reset = false) => {
     if (galleryList.value.length === 0) {
       galleryList.value = demoData
       hasMore.value = false
+      triggerGalleryAnimation()
     }
   } finally {
     loadingMore.value = false
@@ -311,6 +358,30 @@ const handleUploadError = (error) => {
   showToast(error || '上传失败')
 }
 
+const handleDelete = (item) => {
+  if (!item || !item.id) return
+
+  showDialog({
+    title: '确认删除？',
+    message: '删除后将无法恢复，请确认已备份重要照片',
+    showCancelButton: true
+  })
+    .then(async () => {
+      try {
+        const res = await deleteGallery(item.id)
+        if (res) {
+          galleryList.value = galleryList.value.filter(i => i.id !== item.id)
+          showToast('已删除')
+        } else {
+          showToast('删除失败，请稍后重试')
+        }
+      } catch (e) {
+        // 错误提示已在 request 拦截器中处理
+      }
+    })
+    .catch(() => {})
+}
+
 // 处理图片加载错误，使用后端代理作为备用方案
 const handleImageError = (event, item) => {
   const img = event.target
@@ -319,6 +390,11 @@ const handleImageError = (event, item) => {
   // 如果已经切换到备用方案，不再重试
   if (originalSrc.includes('/api/gallery/proxy')) {
     console.error('Image load failed even with proxy:', originalSrc)
+    // 使用占位样式代替浏览器默认的问号图标
+    if (item) {
+      item._fallback = true
+    }
+    img.style.display = 'none'
     return
   }
   
@@ -365,6 +441,22 @@ const triggerGalleryAnimation = () => {
   })
 }
 
+// 滚动到底部自动加载更多
+const handleScroll = () => {
+  if (activeTab.value !== 'gallery') return
+  if (!hasMore.value || loadingMore.value) return
+
+  const scrollBottom = window.innerHeight + window.scrollY
+  const docHeight = document.documentElement.scrollHeight
+
+  const distance = docHeight - scrollBottom
+
+  // 距离底部小于一定阈值，或内容本身不足一屏时，加载更多
+  if (distance < 400 || docHeight <= window.innerHeight + 10) {
+    loadPhotos(false)
+  }
+}
+
 // 监听标签切换，当切换回相册时重新触发动画
 watch(activeTab, (newTab) => {
   if (newTab === 'gallery' && galleryList.value.length > 0) {
@@ -391,6 +483,7 @@ onMounted(async () => {
     }
   }
   window.addEventListener('resize', handleResize)
+  window.addEventListener('scroll', handleScroll)
 
   // 标题点击 5 次解锁上传入口
   const titleEl = document.querySelector('.gallery-wall-title')
@@ -409,6 +502,7 @@ onMounted(async () => {
   
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
+    window.removeEventListener('scroll', handleScroll)
     if (titleEl) {
       titleEl.onclick = null
     }
@@ -568,6 +662,17 @@ onUnmounted(() => {
   object-fit: cover;
 }
 
+.gallery-item__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: linear-gradient(135deg, #f5f0e5, #fbe7e7);
+}
+
 .gallery-item__pin {
   position: absolute;
   top: 4px;
@@ -607,6 +712,17 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gallery-item__cover {
+  border: 0;
+  background: transparent;
+  color: var(--accent-solid);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .gallery-item__like {

@@ -33,6 +33,13 @@
           <div class="image-viewer__counter" v-if="images.length > 1">
             {{ currentIndex + 1 }} / {{ images.length }}
           </div>
+          <button
+            v-if="currentImage.imageUrl && currentImage.thumbUrl && imageSrc !== currentImage.imageUrl"
+            class="image-viewer__original-btn"
+            @click.stop="viewOriginal"
+          >
+            查看原图
+          </button>
         </div>
       </div>
     </div>
@@ -90,11 +97,12 @@ const getProxyUrl = (originalUrl) => {
   return null
 }
 
-// 更新图片源
+// 更新图片源：优先使用缩略图，必要时再切换到原图
 const updateImageSrc = () => {
   if (currentImage.value) {
+    const thumb = currentImage.value.thumbUrl
     const originalUrl = currentImage.value.imageUrl || currentImage.value.url
-    imageSrc.value = originalUrl
+    imageSrc.value = thumb || originalUrl
   }
 }
 
@@ -116,6 +124,14 @@ const handleImageError = (event) => {
     imageSrc.value = proxyUrl
     // 移除错误监听，避免循环
     img.onerror = null
+  }
+}
+
+const viewOriginal = () => {
+  if (!currentImage.value) return
+  const originalUrl = currentImage.value.imageUrl || currentImage.value.url
+  if (originalUrl && imageSrc.value !== originalUrl) {
+    imageSrc.value = originalUrl
   }
 }
 
@@ -220,8 +236,8 @@ watch(() => props.open, (newVal) => {
 
 .image-viewer__container {
   position: relative;
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 本地后端地址
+        // target: 'http://8.138.140.178:8080', // 后端地址
         changeOrigin: true,
         rewrite: (path) => path // 保持路径不变
       }

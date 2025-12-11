@@ -18,7 +18,8 @@ public class MessageController {
     // 提交留言
     @PostMapping("/send")
     public Result<Boolean> send(@RequestBody Message message) {
-        message.setStatus(0); // 默认未审核
+        // 直接设为已通过，提交后前台即可展示
+        message.setStatus(1);
         message.setCreateTime(java.time.LocalDateTime.now());
         return Result.success(messageService.save(message));
     }

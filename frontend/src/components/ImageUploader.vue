@@ -127,6 +127,50 @@ const handleFileChange = async (e) => {
   }
 }
 
+// 简单图片压缩：限制最大边长并降低 JPEG 质量
+const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+
+      const ratio = Math.min(maxWidth / width, maxHeight / height, 1)
+      width = Math.round(width * ratio)
+      height = Math.round(height * ratio)
+
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('canvas.toBlob failed'))
+            return
+          }
+          const compressedFile = new File([blob], file.name.replace(/\.(png|webp)$/i, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          resolve(compressedFile)
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+    img.onerror = reject
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      img.src = e.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 const uploadFiles = async () => {
   uploading.value = true
   uploadProgress.value = 0
@@ -145,7 +189,17 @@ const uploadFiles = async () => {
 
       preview.status = 'uploading'
       try {
-        const result = await uploadImage(preview.file)
+        let fileToUpload = preview.file
+        // 如果是普通图片（非视频），尝试在前端压缩，减少上传体积
+        if (!preview.isVideo && preview.file && preview.file.type.startsWith('image/')) {
+          try {
+            fileToUpload = await compressImage(preview.file)
+          } catch (e) {
+            console.warn('compress image failed, upload original file', e)
+          }
+        }
+
+        const result = await uploadImage(fileToUpload)
         preview.status = 'success'
         results.push({
           success: true,

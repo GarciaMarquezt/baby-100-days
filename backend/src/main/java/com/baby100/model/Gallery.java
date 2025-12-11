@@ -12,6 +12,14 @@ public class Gallery {
     @TableId(type = IdType.AUTO)
     private Integer id;
     private String imageUrl;
+    /**
+     * 缩略图地址（用于列表和预览）
+     */
+    private String thumbUrl;
+    /**
+     * 文件内容哈希（用于去重）
+     */
+    private String fileHash;
     private String category;
     private Integer likes; // 点赞数
     /**
