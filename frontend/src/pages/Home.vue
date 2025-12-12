@@ -1,8 +1,24 @@
 <template>
   <div class="home-page">
+    <!-- 全屏祝福飘屏背景 -->
+    <MessageBarrage
+      ref="messageBarrage"
+      :auto-start="true"
+      :show-controls="false"
+      :show-input="false"
+      :max-blessings="30"
+      :show-sender="false"
+      :speed="1.0"
+      :opacity="0.6"
+      :is-fullscreen="true"
+      class="fullscreen-barrage"
+      @blessing-click="handleBarrageClick"
+      @like="handleBarrageLike"
+    />
+
     <!-- 柔光圆形背景 -->
     <div class="page-glow"></div>
-    
+
     <!-- 金粉粒子背景 -->
     <canvas id="goldParticles" class="gold-particles"></canvas>
     
@@ -51,6 +67,7 @@
       </div>
     </div>
 
+
     <!-- 邀请函内容 -->
     <div class="invite-content">
       <!-- 位置信息 -->
@@ -69,8 +86,33 @@
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <BabyButton type="ghost" @click="$router.push('/gallery')">相册与祝福</BabyButton>
+        <BabyButton type="ghost" @click="$router.push('/gallery')">相册</BabyButton>
         <BabyButton type="primary" @click="$router.push('/register')">赴宴登记</BabyButton>
+      </div>
+
+      <!-- 简化的送祝福输入区域 -->
+      <div class="simple-blessing-input">
+        <div class="input-with-button">
+          <input
+            v-model="newBlessing"
+            @keyup.enter="sendBlessing"
+            placeholder="写下您的祝福..."
+            class="simple-blessing-field"
+            maxlength="20"
+          />
+          <div class="char-counter">
+            {{ newBlessing.length }}/20
+          </div>
+          <BabyButton
+            type="primary"
+            :disabled="!newBlessing.trim()"
+            @click="sendBlessing"
+            class="simple-send-btn"
+            size="small"
+          >
+            送祝福
+          </BabyButton>
+        </div>
       </div>
     </div>
 
@@ -109,12 +151,16 @@ import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast } from 'vant'
 import BabyButton from '../components/Button.vue'
 import BabyCard from '../components/Card.vue'
+import MessageBarrage from '../components/MessageBarrage.vue'
 import { ThemeManager } from '../utils/theme'
 import { initGoldParticles } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
+import { sendMessage } from '../api/message'
 
 const router = useRouter()
 const { loadConfig, getValue } = useConfig()
+const messageBarrage = ref(null)
+const newBlessing = ref('')
 
 // 动态配置
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
@@ -132,6 +178,63 @@ const toggleTheme = () => {
 // 跳转到电子请帖
 const goToInvitation = () => {
   router.push('/invitation')
+}
+
+// 处理弹幕点击
+const handleBarrageClick = (danmu) => {
+  showToast(`${danmu.guestName || danmu.name}: ${danmu.content || danmu.text}`)
+}
+
+// 处理弹幕点赞
+const handleBarrageLike = (danmu) => {
+  danmu.isLiked = !danmu.isLiked
+  showSuccessToast(danmu.isLiked ? '点赞成功！' : '已取消点赞')
+}
+
+// 发送祝福
+const sendBlessing = async () => {
+  const content = newBlessing.value.trim()
+
+  if (!content) {
+    showToast('请先输入祝福内容')
+    return
+  }
+
+  if (content.length > 20) {
+    showToast('祝福内容不能超过20个字符')
+    return
+  }
+
+  try {
+    const response = await sendMessage({
+      content: content,
+      guestName: '祝福者'
+    })
+
+    if (response.code === 0) {
+      showSuccessToast('祝福发送成功！✨')
+      const sentBlessing = newBlessing.value.trim()
+      newBlessing.value = ''
+
+      // 立即在飘屏中显示新祝福
+      if (messageBarrage.value) {
+        messageBarrage.value.addBlessing({
+          id: Date.now(),
+          guestName: '祝福者',
+          content: content,
+          likes: 0,
+          isLiked: false,
+          createTime: new Date().toISOString(),
+          status: 1
+        })
+      }
+    } else {
+      showToast(response.msg || '发送失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('发送祝福失败:', error)
+    showToast('发送失败，请检查网络连接')
+  }
 }
 
 // 地图导航
@@ -244,7 +347,7 @@ onUnmounted(() => {
   padding-top: calc(var(--safe-area-top) + var(--spacing-md));
   padding-bottom: calc(var(--safe-area-bottom) + var(--spacing-md));
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .page-glow {
@@ -413,6 +516,119 @@ onUnmounted(() => {
   50% {
     transform: translateY(-3px);
     opacity: 1;
+  }
+}
+
+/* 全屏祝福飘屏 */
+.fullscreen-barrage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 让祝福飘屏在背景层级，但内容可以点击 */
+.fullscreen-barrage .blessing-barrage {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-barrage .barrage-viewport {
+  pointer-events: auto;
+}
+
+/* 简化的送祝福输入区域 */
+.simple-blessing-input {
+  margin-top: var(--spacing-md);
+}
+
+.input-with-button {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 2px solid var(--divider-color);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  overflow: hidden; /* 确保圆角正确显示 */
+}
+
+.input-with-button:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.simple-blessing-field {
+  flex: 1;
+  min-width: 0; /* 允许压缩 */
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none; /* 移除单独边框 */
+  border-radius: 0; /* 移除圆角 */
+  background: transparent; /* 透明背景 */
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-family: var(--font-family-body);
+  outline: none;
+  transition: none; /* 移除过渡，由父容器处理 */
+}
+
+.simple-blessing-field:focus {
+  outline: none;
+  box-shadow: none; /* 移除单独阴影 */
+}
+
+.simple-blessing-field::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.simple-send-btn {
+  flex-shrink: 0; /* 不被压缩 */
+  white-space: nowrap;
+  margin-left: 8px; /* 与计数器保持间距 */
+  font-weight: 500;
+}
+
+.char-counter {
+  flex-shrink: 0; /* 不被压缩 */
+  margin-left: 8px; /* 与按钮保持间距 */
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: transparent; /* 完全透明 */
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: flex;
+  align-items: center; /* 垂直居中 */
+  height: 100%; /* 占满容器高度 */
+}
+
+/* 移动端适配 - 紧凑布局 */
+@media (max-width: 768px) {
+  .char-counter {
+    font-size: 11px; /* 稍微小一点的字体 */
+    padding: 1px 4px; /* 更小的内边距 */
+    margin-left: 6px; /* 缩小间距 */
+  }
+
+  .simple-send-btn {
+    padding: var(--spacing-sm) var(--spacing-sm); /* 缩小内边距 */
+    font-size: var(--font-size-small); /* 缩小字体 */
+    margin-left: 6px; /* 缩小间距 */
+  }
+}
+
+/* 平板适配 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .simple-send-btn {
+    min-width: 90px;
+    padding: var(--spacing-sm) var(--spacing-md);
   }
 }
 

@@ -14,30 +14,13 @@
         </svg>
         <span>返回</span>
       </button>
-      <h1 class="gallery-wall-title">相册与祝福</h1>
+      <h1 class="gallery-wall-title" @click="handleTitleClick">相册</h1>
       <div style="width: 60px;"></div>
     </header>
 
-    <!-- Tab 切换 -->
-    <div class="tab-container">
-      <button 
-        class="tab-button" 
-        :class="{ 'tab-button--active': activeTab === 'gallery' }"
-        @click="activeTab = 'gallery'"
-      >
-        相册
-      </button>
-      <button 
-        class="tab-button" 
-        :class="{ 'tab-button--active': activeTab === 'message' }"
-        @click="activeTab = 'message'"
-      >
-        祝福留言
-      </button>
-    </div>
 
     <!-- 相册内容 -->
-    <div v-if="activeTab === 'gallery'" class="gallery-content">
+    <div class="gallery-content">
       <!-- 相册网格 -->
       <div v-if="galleryList.length > 0" class="gallery-grid">
         <div 
@@ -163,15 +146,11 @@
       </BabyModal>
     </div>
 
-    <!-- 留言内容 -->
-    <div v-else class="message-content">
-      <MessageContent :hide-nav="true" />
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getGalleryPage, likeGallery, pinGallery, setHomeCover, deleteGallery } from '../api/gallery'
 import { showToast, showDialog } from 'vant'
@@ -180,10 +159,8 @@ import BabyModal from '../components/Modal.vue'
 import ImageViewer from '../components/ImageViewer.vue'
 import ImageUploader from '../components/ImageUploader.vue'
 import { fadeInElements, initGoldParticles } from '../utils/animations'
-import MessageContent from './Message.vue'
 
 const router = useRouter()
-const activeTab = ref('gallery')
 const galleryList = ref([])
 const viewerOpen = ref(false)
 const viewerIndex = ref(0)
@@ -196,6 +173,7 @@ const loadingMore = ref(false)
 
 let titleClickCount = 0
 let titleClickTimer = null
+let adminLoginTriggered = false
 
 // 演示数据
 const demoData = [
@@ -268,7 +246,7 @@ const loadPhotos = async (reset = false) => {
   loadingMore.value = true
   try {
     const res = await getGalleryPage(currentPage.value, pageSize)
-    const records = res?.records || []
+    const records = res?.data?.records || []
 
     if (currentPage.value === 1) {
       galleryList.value = records
@@ -280,7 +258,7 @@ const loadPhotos = async (reset = false) => {
     // 新数据插入后触发淡入动画，让“查看更多”加载的图片可见
     triggerGalleryAnimation()
 
-    const totalPages = res?.pages || 1
+    const totalPages = res?.data?.pages || 1
     if (currentPage.value >= totalPages || records.length < pageSize) {
       hasMore.value = false
     } else {
@@ -443,7 +421,6 @@ const triggerGalleryAnimation = () => {
 
 // 滚动到底部自动加载更多
 const handleScroll = () => {
-  if (activeTab.value !== 'gallery') return
   if (!hasMore.value || loadingMore.value) return
 
   const scrollBottom = window.innerHeight + window.scrollY
@@ -458,11 +435,6 @@ const handleScroll = () => {
 }
 
 // 监听标签切换，当切换回相册时重新触发动画
-watch(activeTab, (newTab) => {
-  if (newTab === 'gallery' && galleryList.value.length > 0) {
-    triggerGalleryAnimation()
-  }
-})
 
 onMounted(async () => {
   await loadPhotos()
@@ -485,16 +457,28 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
   window.addEventListener('scroll', handleScroll)
 
-  // 标题点击 5 次解锁上传入口
+  // 标题点击彩蛋逻辑
   const titleEl = document.querySelector('.gallery-wall-title')
   if (titleEl) {
     titleEl.addEventListener('click', () => {
       titleClickCount++
       if (titleClickTimer) clearTimeout(titleClickTimer)
       titleClickTimer = setTimeout(() => { titleClickCount = 0 }, 800)
+
+      // 第一阶段：解锁上传入口
       if (titleClickCount >= 5 && !showUploadFab.value) {
         showUploadFab.value = true
         showToast('已解锁相册上传入口')
+        titleClickCount = 0
+      }
+      // 第二阶段：解锁后再次快速点击5次触发管理员登录
+      else if (titleClickCount >= 5 && showUploadFab.value && !adminLoginTriggered) {
+        adminLoginTriggered = true
+        showToast('🎉 发现彩蛋！')
+        // 跳转到管理员登录页面
+        setTimeout(() => {
+          router.push('/admin/login')
+        }, 1000)
         titleClickCount = 0
       }
     })

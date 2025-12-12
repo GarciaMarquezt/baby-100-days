@@ -162,7 +162,7 @@ const loadMessages = async () => {
   loading.value = true
   try {
     const res = await getMessageList({ page: page.value, size: pageSize })
-    const records = res?.records || []
+    const records = res?.data?.records || []
 
     if (page.value === 1) {
       messages.value = records
@@ -170,9 +170,9 @@ const loadMessages = async () => {
       messages.value = messages.value.concat(records)
     }
 
-    total.value = res?.total ?? messages.value.length
+    total.value = res?.data?.total ?? messages.value.length
 
-    const totalPages = res?.pages || 1
+    const totalPages = res?.data?.pages || 1
     if (page.value >= totalPages || records.length < pageSize) {
       hasMore.value = false
     } else {

@@ -1,11 +1,10 @@
 <template>
   <div class="invitation-page">
-    <!-- 柔光圆形背景 -->
-    <div class="page-glow"></div>
-    
-    <!-- 金粉粒子背景 -->
+    <!-- 动态背景效果 -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
     <canvas id="goldParticles" class="gold-particles"></canvas>
-    
+
     <!-- 顶部导航 -->
     <header class="invitation-header">
       <button class="back-button" @click="$router.back()">
@@ -14,133 +13,173 @@
         </svg>
         <span>返回</span>
       </button>
-      <h1 class="invitation-title">电子请帖</h1>
+      <h1 class="invitation-title">电子请柬</h1>
       <div style="width: 60px;"></div>
     </header>
 
-    <!-- 请帖内容 -->
+    <!-- 主内容区域 -->
     <div class="invitation-content">
-      <!-- 请帖封面装饰 -->
-      <div class="invitation-envelope">
-        <div class="envelope-seal">
-          <div class="seal-circle">
-            <div class="seal-character">严</div>
+      <!-- 封面卡片 -->
+      <div class="cover-card" :class="{ 'cover-opened': isOpened }" @click="openInvitation">
+        <div class="cover-front">
+          <div class="cover-decoration">
+            <div class="decoration-circle"></div>
+            <div class="decoration-lines">
+              <div class="line line-1"></div>
+              <div class="line line-2"></div>
+              <div class="line line-3"></div>
+            </div>
+          </div>
+          <div class="cover-content">
+            <div class="cover-icon">🎊</div>
+            <h2 class="cover-title">双喜临门</h2>
+            <p class="cover-subtitle">{{ babyName }} · 百日 · 乔迁</p>
+            <div class="cover-hint">
+              <span>点击开启请柬</span>
+              <svg class="hint-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 3v10M3 8l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
           </div>
         </div>
-        
-        <!-- 请帖主体 -->
-        <BabyCard class="invitation-card">
-          <!-- 顶部装饰线 -->
-          <div class="card-decoration-top"></div>
-          
-          <div class="invitation-letter">
-            <!-- 标题区域 -->
-            <div class="invitation-letter__title-section">
-              <div class="title-main">请 柬</div>
-              <div class="title-subtitle">INVITATION</div>
-              <div class="title-divider"></div>
+      </div>
+
+      <!-- 请柬主体内容 -->
+      <transition name="invitation-reveal">
+        <div v-if="isOpened" class="invitation-main">
+          <!-- 祝福语区域 -->
+          <div class="blessing-section">
+            <div class="blessing-header">
+              <div class="blessing-icon">🧧</div>
+              <h3 class="blessing-title">诚挚邀请</h3>
             </div>
+            <p class="blessing-text">
+              祥龙贺岁，福满人间！<br>
+              金猴纳福，瑞气盈门！
+            </p>
+          </div>
 
-            <!-- 称呼 -->
-            <div class="invitation-letter__greeting">
-              <p class="greeting-text">尊敬的</p>
-              <p class="greeting-name">家人朋友们</p>
-            </div>
-
-            <!-- 正文 -->
-            <div class="invitation-letter__body">
-              <p class="body-text">
-                祥龙贺岁，福满人间！🐉
-              </p>
-              
-              <p class="body-text">
-                我们怀着无比喜悦的心情，诚邀您于
-              </p>
-              
-              <div class="date-highlight">
-                <p class="date-text">{{ partyDate }}</p>
+          <!-- 邀请详情 -->
+          <div class="invitation-details">
+            <div class="detail-card">
+              <div class="detail-header">
+                <div class="detail-icon">📅</div>
+                <h4 class="detail-title">宴会时间</h4>
               </div>
-              
-              <p class="body-text">
-                莅临
-              </p>
-              
-              <div class="location-highlight">
-                <p class="location-text">{{ partyAddress }}</p>
-              </div>
-              
-              <p class="body-text">
-                共同见证两个重要时刻：
-              </p>
-
-              <!-- 双喜事件 -->
-              <div class="events-section">
-                <div class="event-card">
-                  <div class="event-icon">👶</div>
-                  <div class="event-content">
-                    <h4 class="event-title">{{ babyName }}百日之喜</h4>
-                    <p class="event-desc">从呱呱坠地到百日圆满，感恩生命中最珍贵的礼物</p>
-                  </div>
-                </div>
-
-                <div class="event-card">
-                  <div class="event-icon">🏡</div>
-                  <div class="event-content">
-                    <h4 class="event-title">乔迁新居·进火之喜</h4>
-                    <p class="event-desc">新居焕彩盈门秀，华堂焕彩纳千祥</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 时间地点信息 -->
-              <div class="info-section">
-                <div class="info-row">
-                  <span class="info-label">⏰ 时间：</span>
-                  <span class="info-value">2026年1月10日 12:08（吉时开席）</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">📍 地点：</span>
-                  <span class="info-value">祁阳鑫利大酒店四楼1号会议厅</span>
-                </div>
+              <div class="detail-content">
+                <p class="detail-primary">{{ partyDate }}</p>
+                <p class="detail-secondary">农历十一月廿二 · 吉时开席</p>
               </div>
             </div>
 
-            <!-- 落款 -->
-            <div class="invitation-letter__signature">
-              <p class="signature-text">👨👩👧 严蓬春、田梦</p>
-              <p class="signature-text">携爱子{{ babyName }} 敬邀</p>
+            <div class="detail-card">
+              <div class="detail-header">
+                <div class="detail-icon">📍</div>
+                <h4 class="detail-title">举办地点</h4>
+              </div>
+              <div class="detail-content">
+                <p class="detail-primary">{{ partyAddress }}</p>
+                <p class="detail-secondary">祁阳鑫利大酒店四楼1号会议厅</p>
+              </div>
             </div>
           </div>
-          
-          <!-- 底部装饰线 -->
-          <div class="card-decoration-bottom"></div>
-        </BabyCard>
-      </div>
 
-      <!-- 操作按钮 -->
-      <div class="invitation-actions">
-        <BabyButton type="ghost" @click="openMap">导航到会场</BabyButton>
-        <BabyButton type="primary" @click="goToRegister">我要出席</BabyButton>
-      </div>
+          <!-- 双喜事件 -->
+          <div class="events-section">
+            <h3 class="section-title">双喜同庆</h3>
+            <div class="events-grid">
+              <div class="event-item">
+                <div class="event-visual">
+                  <div class="event-emoji">👶</div>
+                  <div class="event-pattern"></div>
+                </div>
+                <div class="event-info">
+                  <h4 class="event-name">{{ babyName }}百日之喜</h4>
+                  <p class="event-description">从呱呱坠地到百日圆满，感恩生命中最珍贵的礼物</p>
+                </div>
+              </div>
+
+              <div class="event-item">
+                <div class="event-visual">
+                  <div class="event-emoji">🏡</div>
+                  <div class="event-pattern"></div>
+                </div>
+                <div class="event-info">
+                  <h4 class="event-name">乔迁新居 · 进火之喜</h4>
+                  <p class="event-description">新居焕彩盈门秀，华堂焕彩纳千祥</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 邀请人信息 -->
+          <div class="host-section">
+            <div class="host-decoration">
+              <div class="decoration-left"></div>
+              <div class="decoration-right"></div>
+            </div>
+            <div class="host-content">
+              <p class="host-text">👨‍👩‍👧 严蓬春 · 田梦</p>
+              <p class="host-text">携爱子 {{ babyName }}</p>
+              <p class="host-invitation">敬邀</p>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="invitation-actions">
+            <BabyButton type="ghost" @click="openMap" class="action-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2C5.79 2 4 3.79 4 6c0 3.31 3.87 7.75 3.22 8.49a.5.5 0 01-.44.25.5.5 0 01-.44-.25C4.13 13.75 8 9.31 8 6c0-2.21-1.79-4-4-4z" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="8" cy="6" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              导航到会场
+            </BabyButton>
+            <BabyButton type="primary" @click="goToRegister" class="action-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2l1.09 3.26h3.26l-2.64 1.91 1.09 3.26L8 8.52l-2.8 2.01 1.09-3.26-2.64-1.91h3.26z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              我要出席
+            </BabyButton>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import BabyButton from '../components/Button.vue'
-import BabyCard from '../components/Card.vue'
 import { initGoldParticles } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
 
 const router = useRouter()
 const { loadConfig, getValue } = useConfig()
 
+// 响应式数据
+const isOpened = ref(false)
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
-const partyDate = computed(() => getValue('party_date', '2026-01-10 12:00'))
+const partyDate = computed(() => getValue('party_date', '2026年1月10日 12:08'))
 const partyAddress = computed(() => getValue('party_address', '祁阳鑫利大酒店四楼1号会议厅'))
 let cleanupParticles = null
+
+// 方法
+const openInvitation = async () => {
+  if (isOpened.value) return
+
+  isOpened.value = true
+  await nextTick()
+
+  // 滚动到内容区域
+  const mainElement = document.querySelector('.invitation-main')
+  if (mainElement) {
+    mainElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+}
 
 const openMap = () => {
   const mapUrl = `https://uri.amap.com/marker?position=111.836,26.5755&name=${encodeURIComponent(partyAddress.value)}&src=invitation&coordinate=gaode&callnative=1`
@@ -151,12 +190,16 @@ const goToRegister = () => {
   router.push('/register')
 }
 
+// 生命周期
 onMounted(() => {
   loadConfig()
-  // 初始化金箔粒子动画
+
+  // 初始化金箔粒子动画 - 更柔和的配置
   cleanupParticles = initGoldParticles('goldParticles', {
-    particleCount: 50,
-    colors: ['#FFD700', '#FFA500', '#FFE135']
+    particleCount: 30,
+    colors: ['#FFD700', '#FFA500', '#FFE135', '#FFF8DC'],
+    size: { min: 2, max: 4 },
+    speed: { min: 0.5, max: 1.5 }
   })
 
   // 窗口大小改变时重新调整 canvas
@@ -192,54 +235,31 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-.page-glow {
+/* 背景效果 */
+.bg-gradient {
   position: fixed;
-  top: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at top, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom, rgba(199, 62, 29, 0.06) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(60px);
 }
 
-.invitation-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
-  position: relative;
-  z-index: 10;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  background: transparent;
-  border: 0;
-  color: var(--text-primary);
-  font-size: var(--font-size-body);
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-base);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.back-button:hover {
-  background: var(--muted);
-}
-
-.invitation-title {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  margin: 0;
-  font-family: var(--font-family);
+.bg-pattern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+    radial-gradient(circle at 80% 80%, rgba(199, 62, 29, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .gold-particles {
@@ -252,336 +272,618 @@ onUnmounted(() => {
   z-index: 1;
 }
 
+/* 头部导航 */
+.invitation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+  z-index: 10;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.invitation-title {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+  font-family: var(--font-family);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 主内容区域 */
 .invitation-content {
-  margin-top: var(--spacing-lg);
   position: relative;
   z-index: 2;
 }
 
-/* 信封效果 */
-.invitation-envelope {
-  position: relative;
+/* 封面卡片 */
+.cover-card {
   margin-bottom: var(--spacing-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
 }
 
-.envelope-seal {
+.cover-front {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-lg);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.cover-front::before {
+  content: '';
   position: absolute;
-  top: -20px;
-  right: 20px;
-  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(199, 62, 29, 0.05) 100%);
+  border-radius: inherit;
+  z-index: -1;
 }
 
-.seal-circle {
-  width: 60px;
-  height: 60px;
+.cover-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.decoration-circle {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: var(--accent);
-  border: 3px solid var(--gold);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  animation: float 3s ease-in-out infinite;
+}
+
+.decoration-lines {
+  position: absolute;
+  bottom: var(--spacing-lg);
+  left: var(--spacing-lg);
+  right: var(--spacing-lg);
+}
+
+.line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+  margin-bottom: var(--spacing-sm);
+}
+
+.line-1 { width: 100%; animation: slide-right 4s ease-in-out infinite; }
+.line-2 { width: 80%; animation: slide-right 4s ease-in-out infinite 1s; }
+.line-3 { width: 60%; animation: slide-right 4s ease-in-out infinite 2s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes slide-right {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+.cover-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-icon {
+  font-size: 64px;
+  margin-bottom: var(--spacing-lg);
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+.cover-title {
+  font-size: 32px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
+  margin: 0 0 var(--spacing-md) 0;
+  font-family: var(--font-family);
+  letter-spacing: 2px;
+}
+
+.cover-subtitle {
+  font-size: var(--font-size-body);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xl) 0;
+  font-family: var(--font-family);
+}
+
+.cover-hint {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(199, 62, 29, 0.3);
-  animation: seal-pulse 2s ease-in-out infinite;
-}
-
-@keyframes seal-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.seal-character {
-  color: #fff;
-  font-size: 28px;
-  font-weight: var(--font-weight-bold);
-  font-family: var(--font-family);
-}
-
-/* 请帖卡片 */
-.invitation-card {
-  position: relative;
-  background: linear-gradient(180deg, #FFFEF9 0%, #FAF8F3 100%);
-  border: 2px solid var(--gold);
-  box-shadow: 0 8px 32px rgba(199, 62, 29, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.2);
-  overflow: visible;
-}
-
-.card-decoration-top,
-.card-decoration-bottom {
-  height: 4px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 0 -2px;
-  position: relative;
-}
-
-.card-decoration-top {
-  margin-top: -2px;
-  margin-bottom: var(--spacing-md);
-}
-
-.card-decoration-bottom {
-  margin-top: var(--spacing-md);
-  margin-bottom: -2px;
-}
-
-.card-decoration-top::before,
-.card-decoration-bottom::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 8px;
-  background: var(--gold);
-  border-radius: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* 请帖内容 */
-.invitation-letter {
-  padding: var(--spacing-xl) var(--spacing-lg);
-  position: relative;
-}
-
-/* 标题区域 */
-.invitation-letter__title-section {
-  text-align: center;
-  margin-bottom: var(--spacing-2xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 2px solid var(--gold);
-  position: relative;
-}
-
-.title-main {
-  font-size: 48px;
-  font-weight: var(--font-weight-bold);
-  color: var(--accent-solid);
-  font-family: var(--font-family);
-  letter-spacing: 8px;
-  margin-bottom: var(--spacing-xs);
-  text-shadow: 2px 2px 4px rgba(199, 62, 29, 0.1);
-}
-
-.title-subtitle {
-  font-size: 12px;
+  gap: var(--spacing-sm);
   color: var(--text-secondary);
-  letter-spacing: 4px;
-  margin-bottom: var(--spacing-sm);
-  font-family: 'Times New Roman', serif;
+  font-size: var(--font-size-small);
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.title-divider {
-  width: 60px;
-  height: 2px;
-  background: var(--gold);
-  margin: 0 auto;
+.hint-arrow {
+  animation: bounce-arrow 2s ease-in-out infinite;
 }
 
-/* 称呼 */
-.invitation-letter__greeting {
-  text-align: center;
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes bounce-arrow {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(3px); }
+  60% { transform: translateY(1px); }
+}
+
+/* 封面打开状态 */
+.cover-opened .cover-front {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+/* 请柬主体内容 */
+.invitation-main {
+  animation: slide-up 0.8s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 祝福语区域 */
+.blessing-section {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  text-align: center;
 }
 
-.greeting-text {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
-  margin: 0;
-  font-family: var(--font-family);
+.blessing-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
-.greeting-name {
+.blessing-icon {
+  font-size: 32px;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(90deg); }
+  50% { transform: scale(1) rotate(180deg); }
+  75% { transform: scale(1.1) rotate(270deg); }
+}
+
+.blessing-title {
   font-size: 24px;
   font-weight: var(--font-weight-bold);
   color: var(--accent-solid);
-  margin: var(--spacing-xs) 0 0 0;
-  font-family: var(--font-family);
-}
-
-/* 正文 */
-.invitation-letter__body {
-  line-height: 2;
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xl);
-  font-size: var(--font-size-body);
-}
-
-.body-text {
-  margin: var(--spacing-md) 0;
-  text-indent: 2em;
-  font-family: var(--font-family);
-}
-
-.date-highlight,
-.location-highlight {
-  text-align: center;
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-md);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(199, 62, 29, 0.05));
-  border-left: 3px solid var(--gold);
-  border-radius: var(--radius-sm);
-}
-
-.date-text,
-.location-text {
-  font-size: 20px;
-  font-weight: var(--font-weight-bold);
-  color: var(--accent-solid);
   margin: 0;
   font-family: var(--font-family);
 }
 
-.date-lunar,
-.location-detail {
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
-  margin: var(--spacing-xs) 0 0 0;
-}
-
-/* 事件卡片 */
-.events-section {
-  margin: var(--spacing-xl) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.event-card {
-  display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--muted);
-  border-radius: var(--radius-md);
-  border-left: 4px solid var(--gold);
-  align-items: flex-start;
-}
-
-.event-icon {
-  font-size: 40px;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.event-content {
-  flex: 1;
-}
-
-.event-title {
+.blessing-text {
   font-size: var(--font-size-body);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.8;
+  font-family: var(--font-family);
+}
+
+/* 邀请详情 */
+.invitation-details {
+  display: grid;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.detail-card {
+  background: linear-gradient(135deg, #FFF 0%, #F8F6F0 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  transition: transform var(--transition-base);
+}
+
+.detail-card:hover {
+  transform: translateY(-2px);
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.detail-icon {
+  font-size: 24px;
+  background: var(--accent);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-title {
+  font-size: var(--font-size-h2);
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
+  margin: 0;
+  font-family: var(--font-family);
+}
+
+.detail-content {
+  padding-left: 60px;
+}
+
+.detail-primary {
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
   margin: 0 0 var(--spacing-xs) 0;
   font-family: var(--font-family);
 }
 
-.event-desc {
+.detail-secondary {
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.6;
-}
-
-/* 信息区域 */
-.info-section {
-  background: var(--muted);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  margin: var(--spacing-xl) 0;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-}
-
-.info-row {
-  margin-bottom: var(--spacing-sm);
-  font-size: var(--font-size-body);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-xs);
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
-}
-
-.info-label {
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  flex-shrink: 0;
   font-family: var(--font-family);
 }
 
-.info-value {
-  color: var(--text-secondary);
+/* 双喜事件 */
+.events-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  text-align: center;
+  margin: 0 0 var(--spacing-xl) 0;
+  font-family: var(--font-family);
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+
+.events-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.event-item {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+  transition: all var(--transition-base);
+}
+
+.event-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.event-visual {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.event-emoji {
+  font-size: 48px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(199, 62, 29, 0.05));
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: gentle-float 3s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.event-pattern {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.1) 2px, transparent 2px);
+  border-radius: 50%;
+  animation: rotate-pattern 10s linear infinite;
+}
+
+@keyframes rotate-pattern {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.event-info {
   flex: 1;
 }
 
-/* 落款 */
-.invitation-letter__signature {
-  text-align: right;
-  margin-top: var(--spacing-2xl);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--divider-color);
-}
-
-.signature-text {
-  font-size: var(--font-size-body);
-  color: var(--text-primary);
-  margin: var(--spacing-xs) 0;
+.event-name {
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
+  margin: 0 0 var(--spacing-md) 0;
   font-family: var(--font-family);
 }
 
-.signature-date {
-  font-size: var(--font-size-small);
+.event-description {
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+  font-family: var(--font-family);
+}
+
+/* 邀请人信息 */
+.host-section {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.host-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.decoration-left,
+.decoration-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.decoration-left {
+  left: var(--spacing-lg);
+  animation: slide-left 3s ease-in-out infinite;
+}
+
+.decoration-right {
+  right: var(--spacing-lg);
+  animation: slide-right-decoration 3s ease-in-out infinite;
+}
+
+@keyframes slide-left {
+  0% { transform: translateY(-50%) translateX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-50%) translateX(-20px); opacity: 0; }
+}
+
+@keyframes slide-right-decoration {
+  0% { transform: translateY(-50%) translateX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-50%) translateX(20px); opacity: 0; }
+}
+
+.host-content {
+  position: relative;
+  z-index: 1;
+}
+
+.host-text {
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  margin: var(--spacing-sm) 0;
+  font-family: var(--font-family);
+}
+
+.host-invitation {
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
   margin: var(--spacing-md) 0 0 0;
-  font-style: italic;
+  font-family: var(--font-family);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px rgba(199, 62, 29, 0.3); }
+  to { text-shadow: 0 0 15px rgba(199, 62, 29, 0.6); }
 }
 
 /* 操作按钮 */
 .invitation-actions {
   display: flex;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  gap: var(--spacing-lg);
   justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gold);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 过渡动画 */
+.invitation-reveal-enter-active {
+  transition: all 0.8s ease-out;
+}
+
+.invitation-reveal-enter-from {
+  opacity: 0;
+  transform: translateY(50px) scale(0.95);
+}
+
+.invitation-reveal-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* 深色模式适配 */
-[data-theme='dark'] .invitation-card {
-  background: linear-gradient(180deg, #252018 0%, #1F1A14 100%);
-  box-shadow: 0 8px 32px rgba(199, 62, 29, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.3);
+[data-theme='dark'] .cover-front,
+[data-theme='dark'] .blessing-section,
+[data-theme='dark'] .detail-card,
+[data-theme='dark'] .event-item,
+[data-theme='dark'] .host-section {
+  background: linear-gradient(135deg, #252018 0%, #1F1A14 100%);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
-[data-theme='dark'] .date-highlight,
-[data-theme='dark'] .location-highlight {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(199, 62, 29, 0.15));
-  border-left: 3px solid var(--gold);
+[data-theme='dark'] .bg-gradient {
+  background: radial-gradient(ellipse at top, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom, rgba(199, 62, 29, 0.12) 0%, transparent 50%);
 }
 
-[data-theme='dark'] .title-main {
-  text-shadow: 2px 2px 4px rgba(199, 62, 29, 0.3);
+[data-theme='dark'] .back-button {
+  background: rgba(37, 32, 24, 0.8);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
-[data-theme='dark'] .info-section {
-  border: 1px solid rgba(212, 175, 55, 0.4);
-}
-
-[data-theme='dark'] .page-glow {
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
-}
-
-/* 响应式 */
-@media (max-width: 360px) {
-  .invitation-letter {
-    padding: var(--spacing-lg) var(--spacing-md);
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .cover-front {
+    padding: var(--spacing-xl);
   }
-  
-  .title-main {
-    font-size: 36px;
-    letter-spacing: 4px;
+
+  .cover-icon {
+    font-size: 48px;
   }
-  
-  .event-card {
+
+  .cover-title {
+    font-size: 24px;
+  }
+
+  .detail-card {
+    padding: var(--spacing-md);
+  }
+
+  .detail-content {
+    padding-left: 0;
+    padding-top: var(--spacing-md);
+  }
+
+  .event-item {
     flex-direction: column;
     text-align: center;
+  }
+
+  .event-emoji {
+    align-self: center;
+  }
+
+  .invitation-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .action-btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
   }
 }
 </style>
