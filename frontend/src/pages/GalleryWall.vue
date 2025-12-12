@@ -15,14 +15,86 @@
         <span>返回</span>
       </button>
       <h1 class="gallery-wall-title" @click="handleTitleClick">相册</h1>
-      <div style="width: 60px;"></div>
+
+      <!-- 视图切换按钮 -->
+      <div class="view-toggle">
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'grid' }"
+          @click="viewMode = 'grid'"
+          title="网格视图"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="btn-text">网格</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'wheel' }"
+          @click="viewMode = 'wheel'"
+          title="时光轮盘"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="btn-text">轮盘</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'timeline' }"
+          @click="viewMode = 'timeline'"
+          title="时间线"
+        >
+          📅
+          <span class="btn-text">时间线</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'waterfall' }"
+          @click="viewMode = 'waterfall'"
+          title="瀑布流"
+        >
+          🌊
+          <span class="btn-text">瀑布流</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'carousel' }"
+          @click="viewMode = 'carousel'"
+          title="旋转木马"
+        >
+          🎠
+          <span class="btn-text">木马</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'stack' }"
+          @click="viewMode = 'stack'"
+          title="照片堆叠"
+        >
+          📚
+          <span class="btn-text">堆叠</span>
+        </button>
+        <button
+          class="toggle-btn"
+          :class="{ 'active': viewMode === 'capsule' }"
+          @click="viewMode = 'capsule'"
+          title="时光胶囊"
+        >
+          💎
+          <span class="btn-text">胶囊</span>
+        </button>
+      </div>
     </header>
 
 
     <!-- 相册内容 -->
     <div class="gallery-content">
-      <!-- 相册网格 -->
-      <div v-if="galleryList.length > 0" class="gallery-grid">
+      <!-- 网格视图 -->
+      <div v-if="galleryList.length > 0 && viewMode === 'grid'" class="gallery-grid">
         <div 
           v-for="(item, index) in galleryList" 
           :key="item.id" 
@@ -95,7 +167,51 @@
           </div>
         </div>
       </div>
-      
+
+      <!-- 时光轮盘视图 -->
+      <TimeWheelGallery
+        v-if="galleryList.length > 0 && viewMode === 'wheel'"
+        :photos="wheelPhotos"
+        @like="handleWheelLike"
+        @view="handleWheelView"
+      />
+
+      <!-- 时间线视图 -->
+      <PhotoTimelineGallery
+        v-if="galleryList.length > 0 && viewMode === 'timeline'"
+        :photos="galleryList"
+        @like="handleLike"
+      />
+
+      <!-- 瀑布流视图 -->
+      <WaterfallGallery
+        v-if="galleryList.length > 0 && viewMode === 'waterfall'"
+        :photos="galleryList"
+        @like="handleLike"
+        @load-more="handleLoadMore"
+      />
+
+      <!-- 旋转木马视图 -->
+      <CarouselGallery
+        v-if="galleryList.length > 0 && viewMode === 'carousel'"
+        :photos="galleryList"
+        @like="handleLike"
+      />
+
+      <!-- 堆叠视图 -->
+      <StackGallery
+        v-if="galleryList.length > 0 && viewMode === 'stack'"
+        :photos="galleryList"
+        @like="handleLike"
+      />
+
+      <!-- 时光胶囊视图 -->
+      <CapsuleGallery
+        v-if="galleryList.length > 0 && viewMode === 'capsule'"
+        :photos="galleryList"
+        @like="handleLike"
+      />
+
       <!-- 空状态 -->
       <div v-else class="gallery-empty">
         <div class="gallery-empty__icon">📭</div>
@@ -150,7 +266,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getGalleryPage, likeGallery, pinGallery, setHomeCover, deleteGallery } from '../api/gallery'
 import { showToast, showDialog } from 'vant'
@@ -158,7 +274,14 @@ import BabyButton from '../components/Button.vue'
 import BabyModal from '../components/Modal.vue'
 import ImageViewer from '../components/ImageViewer.vue'
 import ImageUploader from '../components/ImageUploader.vue'
-import { fadeInElements, initGoldParticles } from '../utils/animations'
+import TimeWheelGallery from '../components/TimeWheelGallery.vue'
+import PhotoTimelineGallery from '../components/PhotoTimelineGallery.vue'
+import WaterfallGallery from '../components/WaterfallGallery.vue'
+import CarouselGallery from '../components/CarouselGallery.vue'
+import StackGallery from '../components/StackGallery.vue'
+import CapsuleGallery from '../components/CapsuleGallery.vue'
+import { fadeInElements, initGoldParticles, touchFeedbackAnimation, createLongPressHandler, scrollToElement, createParallaxEffect } from '../utils/animations'
+import { useGesture } from '@vueuse/gesture'
 
 const router = useRouter()
 const galleryList = ref([])
@@ -167,6 +290,7 @@ const viewerIndex = ref(0)
 const showUpload = ref(false)
 const showUploadFab = ref(false)
 const currentPage = ref(1)
+const viewMode = ref('grid') // grid, wheel, timeline, waterfall, carousel, stack, capsule
 const pageSize = 9
 const hasMore = ref(true)
 const loadingMore = ref(false)
@@ -336,6 +460,14 @@ const handleUploadError = (error) => {
   showToast(error || '上传失败')
 }
 
+const handleLoadMore = (done) => {
+  // 对于瀑布流视图，可以在这里添加加载更多数据的逻辑
+  // 目前先直接调用done()来完成加载状态
+  setTimeout(() => {
+    done && done()
+  }, 500)
+}
+
 const handleDelete = (item) => {
   if (!item || !item.id) return
 
@@ -364,7 +496,7 @@ const handleDelete = (item) => {
 const handleImageError = (event, item) => {
   const img = event.target
   const originalSrc = img.src
-  
+
   // 如果已经切换到备用方案，不再重试
   if (originalSrc.includes('/api/gallery/proxy')) {
     console.error('Image load failed even with proxy:', originalSrc)
@@ -375,14 +507,14 @@ const handleImageError = (event, item) => {
     img.style.display = 'none'
     return
   }
-  
+
   // 尝试从原始URL中提取相对路径
   // 例如：https://1101020.xyz/uploads/images/xxx.jpg -> images/xxx.jpg
   let relativePath = ''
   try {
     const url = new URL(originalSrc)
     const pathname = url.pathname
-    
+
     // 提取 /uploads/ 之后的部分
     const uploadsIndex = pathname.indexOf('/uploads/')
     if (uploadsIndex !== -1) {
@@ -392,7 +524,7 @@ const handleImageError = (event, item) => {
       const parts = pathname.split('/')
       relativePath = parts[parts.length - 1]
     }
-    
+
     if (relativePath) {
       // 切换到后端代理接口
       const proxyUrl = `/api/gallery/proxy?path=${encodeURIComponent(relativePath)}`
@@ -405,6 +537,27 @@ const handleImageError = (event, item) => {
     }
   } catch (e) {
     console.error('Error parsing image URL:', e)
+  }
+}
+
+// 时光轮盘视图的数据处理
+const wheelPhotos = computed(() => {
+  return galleryList.value.map((item, index) => ({
+    ...item,
+    date: index + 1 // 模拟日期数据
+  }))
+})
+
+// 处理时光轮盘的点赞
+const handleWheelLike = (item) => {
+  handleLike(item)
+}
+
+// 处理时光轮盘的查看
+const handleWheelView = (item) => {
+  const index = galleryList.value.findIndex(i => i.id === item.id)
+  if (index !== -1) {
+    openViewer(index)
   }
 }
 
@@ -570,6 +723,58 @@ onUnmounted(() => {
   color: var(--text-primary);
   margin: 0;
   font-family: var(--font-family);
+}
+
+.view-toggle {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.toggle-btn {
+  min-width: 60px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--gold);
+  background: var(--card-bg);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-size: 12px;
+  padding: 0 8px;
+}
+
+.toggle-btn:hover {
+  background: var(--gold);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.toggle-btn.active {
+  background: var(--gold);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-text {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .btn-text {
+    display: inline;
+  }
+
+  .toggle-btn {
+    min-width: 80px;
+    padding: 0 12px;
+  }
 }
 
 .tab-container {

@@ -150,8 +150,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { gsap } from 'gsap'
 import BabyButton from '../components/Button.vue'
-import { initGoldParticles } from '../utils/animations'
+import { initGoldParticles, bounceInAnimation, slideInAnimation, sparkleAnimation } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
 
 const router = useRouter()
@@ -171,13 +172,147 @@ const openInvitation = async () => {
   isOpened.value = true
   await nextTick()
 
-  // 滚动到内容区域
-  const mainElement = document.querySelector('.invitation-main')
-  if (mainElement) {
-    mainElement.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+  // GSAP 增强的信封打开动画
+  const coverCard = document.querySelector('.cover-card')
+  const invitationMain = document.querySelector('.invitation-main')
+  const coverDecoration = document.querySelector('.cover-decoration')
+  const coverContent = document.querySelector('.cover-content')
+
+  if (coverCard && invitationMain) {
+    // 创建时间线动画
+    const tl = gsap.timeline()
+
+    // 1. 装饰元素闪烁动画
+    tl.to(coverDecoration, {
+      scale: 1.1,
+      duration: 0.3,
+      ease: "power2.out",
+      yoyo: true,
+      repeat: 1
     })
+
+    // 2. 信封翻转动画
+    tl.to(coverCard, {
+      rotationY: 180,
+      scale: 1.05,
+      duration: 0.8,
+      ease: "back.out(1.2)"
+    }, "-=0.2")
+
+    // 3. 内容淡出
+    tl.to([coverDecoration, coverContent], {
+      opacity: 0,
+      y: -20,
+      duration: 0.4,
+      ease: "power2.in"
+    }, "-=0.4")
+
+    // 4. 邀请函内容依次出现
+    tl.fromTo(invitationMain, {
+      opacity: 0,
+      y: 50,
+      scale: 0.9
+    }, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.8,
+      ease: "power2.out"
+    }, "-=0.2")
+
+    // 5. 祝福语区域动画
+    const blessingSection = document.querySelector('.blessing-section')
+    if (blessingSection) {
+      tl.fromTo(blessingSection, {
+        opacity: 0,
+        x: -30
+      }, {
+        opacity: 1,
+        x: 0,
+        duration: 0.6,
+        ease: "power2.out"
+      }, "-=0.4")
+    }
+
+    // 6. 详情卡片依次出现
+    const detailCards = document.querySelectorAll('.detail-card')
+    tl.fromTo(detailCards, {
+      opacity: 0,
+      y: 30,
+      scale: 0.95
+    }, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.5,
+      stagger: 0.1,
+      ease: "back.out(1.7)"
+    }, "-=0.3")
+
+    // 7. 事件项目动画
+    const eventItems = document.querySelectorAll('.event-item')
+    tl.fromTo(eventItems, {
+      opacity: 0,
+      scale: 0.8,
+      rotation: -10
+    }, {
+      opacity: 1,
+      scale: 1,
+      rotation: 0,
+      duration: 0.6,
+      stagger: 0.15,
+      ease: "back.out(1.7)"
+    }, "-=0.4")
+
+    // 8. 主人信息动画
+    const hostSection = document.querySelector('.host-section')
+    if (hostSection) {
+      tl.fromTo(hostSection, {
+        opacity: 0,
+        y: 20
+      }, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power2.out"
+      }, "-=0.3")
+    }
+
+    // 9. 操作按钮依次弹入
+    const actionButtons = document.querySelectorAll('.action-btn')
+    tl.fromTo(actionButtons, {
+      opacity: 0,
+      scale: 0.5,
+      y: 20
+    }, {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      duration: 0.4,
+      stagger: 0.1,
+      ease: "back.out(1.7)"
+    }, "-=0.4")
+
+    // 添加闪烁特效
+    const sparkleElements = document.querySelectorAll('.event-emoji, .detail-icon')
+    sparkleElements.forEach((element, index) => {
+      gsap.to(element, {
+        scale: 1.1,
+        duration: 0.3,
+        delay: 1.5 + index * 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      })
+    })
+
+    // 滚动到内容区域
+    setTimeout(() => {
+      invitationMain.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }, 800)
   }
 }
 
@@ -191,8 +326,91 @@ const goToRegister = () => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
   loadConfig()
+  await nextTick()
+
+  // 页面进入动画时间线
+  const pageTl = gsap.timeline()
+
+  // 1. 顶部导航滑入
+  const header = document.querySelector('.invitation-header')
+  if (header) {
+    gsap.set(header, { y: -50, opacity: 0 })
+    pageTl.to(header, {
+      y: 0,
+      opacity: 1,
+      duration: 0.6,
+      ease: "power2.out"
+    })
+  }
+
+  // 2. 封面卡片从下方弹入
+  const coverCard = document.querySelector('.cover-card')
+  if (coverCard) {
+    gsap.set(coverCard, { y: 100, opacity: 0, scale: 0.8 })
+    pageTl.to(coverCard, {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 0.8,
+      ease: "back.out(1.7)"
+    }, "-=0.3")
+  }
+
+  // 3. 装饰元素依次出现
+  const decorationCircles = document.querySelectorAll('.decoration-circle, .decoration-lines .line')
+  gsap.set(decorationCircles, { scale: 0, opacity: 0 })
+  pageTl.to(decorationCircles, {
+    scale: 1,
+    opacity: 1,
+    duration: 0.4,
+    stagger: 0.1,
+    ease: "back.out(1.7)"
+  }, "-=0.4")
+
+  // 4. 封面内容文字动画
+  const coverContent = document.querySelector('.cover-content')
+  if (coverContent) {
+    const title = coverContent.querySelector('.cover-title')
+    const subtitle = coverContent.querySelector('.cover-subtitle')
+    const hint = coverContent.querySelector('.cover-hint')
+
+    gsap.set([title, subtitle, hint], { opacity: 0, y: 20 })
+
+    pageTl.to(title, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    }, "-=0.3")
+
+    pageTl.to(subtitle, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    }, "-=0.2")
+
+    pageTl.to(hint, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    }, "-=0.2")
+  }
+
+  // 5. 添加封面卡片的持续动画
+  if (coverCard) {
+    gsap.to(coverCard, {
+      y: -5,
+      duration: 2,
+      ease: "power2.inOut",
+      yoyo: true,
+      repeat: -1,
+      delay: 2
+    })
+  }
 
   // 初始化金箔粒子动画 - 更柔和的配置
   cleanupParticles = initGoldParticles('goldParticles', {

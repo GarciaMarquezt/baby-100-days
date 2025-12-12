@@ -3,17 +3,27 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 // 引入需要的 Vant 组件
-import { 
-    Button, Form, Field, CellGroup, RadioGroup, Radio, 
+import {
+    Button, Form, Field, CellGroup, RadioGroup, Radio,
     Stepper, Toast, Dialog, Uploader, Switch, Popup, Icon,
     NavBar, Tabbar, TabbarItem, List, SwipeCell, Cell, Tag, Image as VanImage,
     Tab, Tabs, Search, ActionSheet
 } from 'vant';
 import 'vant/lib/index.css';
+// 引入 Vue Lazyload
+import VueLazyload from 'vue-lazyload'
 
 const app = createApp(App)
 
 app.use(router)
+
+// 注册 Vue Lazyload
+app.use(VueLazyload, {
+  preLoad: 1.3,
+  error: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
+  loading: 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg',
+  attempt: 1
+})
 
 // 批量注册 Vant 组件
 app.use(Button)

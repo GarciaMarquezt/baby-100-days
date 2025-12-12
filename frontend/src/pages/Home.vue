@@ -146,14 +146,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showSuccessToast } from 'vant'
+import { gsap } from 'gsap'
 import BabyButton from '../components/Button.vue'
 import BabyCard from '../components/Card.vue'
 import MessageBarrage from '../components/MessageBarrage.vue'
 import { ThemeManager } from '../utils/theme'
-import { initGoldParticles } from '../utils/animations'
+import { initGoldParticles, slideInAnimation, bounceInAnimation } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
 import { sendMessage } from '../api/message'
 
@@ -293,19 +294,113 @@ const checkAdminPassword = () => {
 // 初始化
 let cleanupParticles = null
 
-onMounted(() => {
+onMounted(async () => {
   ThemeManager.init()
   isDark.value = ThemeManager.getTheme() === 'dark'
 
   // 加载动态配置（宝宝姓名、时间、地点等）
   loadConfig()
-  
+
+  await nextTick()
+
+  // GSAP 页面进入动画
+  const pageTl = gsap.timeline()
+
+  // 1. 顶部导航滑入
+  const header = document.querySelector('.home-header')
+  if (header) {
+    gsap.set(header, { y: -50, opacity: 0 })
+    pageTl.to(header, {
+      y: 0,
+      opacity: 1,
+      duration: 0.6,
+      ease: "power2.out"
+    })
+  }
+
+  // 2. 封面照片从右侧滑入
+  const coverPhoto = document.querySelector('.cover-photo')
+  if (coverPhoto) {
+    gsap.set(coverPhoto, { x: 100, opacity: 0, scale: 0.8 })
+    pageTl.to(coverPhoto, {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 0.8,
+      ease: "back.out(1.7)"
+    }, "-=0.3")
+  }
+
+  // 3. 标题和副标题依次出现
+  const coverTitle = document.querySelector('.cover-title')
+  const coverSubtitle = document.querySelector('.cover-subtitle')
+  const coverActions = document.querySelector('.cover-actions')
+
+  gsap.set([coverTitle, coverSubtitle, coverActions], { opacity: 0, y: 30 })
+
+  pageTl.to(coverTitle, {
+    opacity: 1,
+    y: 0,
+    duration: 0.6,
+    ease: "power2.out"
+  }, "-=0.4")
+
+  pageTl.to(coverSubtitle, {
+    opacity: 1,
+    y: 0,
+    duration: 0.6,
+    ease: "power2.out"
+  }, "-=0.3")
+
+  // 4. 操作按钮弹入
+  pageTl.to(coverActions, {
+    opacity: 1,
+    y: 0,
+    duration: 0.6,
+    ease: "back.out(1.7)"
+  }, "-=0.3")
+
+  // 5. 邀请函内容区域依次滑入
+  const inviteContent = document.querySelector('.invite-content')
+  if (inviteContent) {
+    const locationInfo = inviteContent.querySelector('.location-info')
+    const actionButtons = inviteContent.querySelector('.action-buttons')
+
+    gsap.set([locationInfo, actionButtons], { opacity: 0, x: -50 })
+
+    pageTl.to(locationInfo, {
+      opacity: 1,
+      x: 0,
+      duration: 0.6,
+      ease: "power2.out"
+    }, "-=0.2")
+
+    pageTl.to(actionButtons, {
+      opacity: 1,
+      x: 0,
+      duration: 0.6,
+      ease: "power2.out"
+    }, "-=0.3")
+  }
+
+  // 6. 添加封面照片的持续动画
+  if (coverPhoto) {
+    gsap.to(coverPhoto, {
+      y: -8,
+      duration: 3,
+      ease: "power2.inOut",
+      yoyo: true,
+      repeat: -1,
+      delay: 2
+    })
+  }
+
   // 初始化金粉粒子动画
   cleanupParticles = initGoldParticles('goldParticles', {
     particleCount: 60,
     colors: ['#D4AF37', '#E8D5A3', '#B8941F']
   })
-  
+
   // 窗口大小改变时重新调整 canvas
   const handleResize = () => {
     const canvas = document.getElementById('goldParticles')
