@@ -29,64 +29,6 @@
           </svg>
           <span class="btn-text">网格</span>
         </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'wheel' }"
-          @click="viewMode = 'wheel'"
-          title="时光轮盘"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="12" r="2" fill="currentColor"/>
-            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span class="btn-text">轮盘</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'timeline' }"
-          @click="viewMode = 'timeline'"
-          title="时间线"
-        >
-          📅
-          <span class="btn-text">时间线</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'waterfall' }"
-          @click="viewMode = 'waterfall'"
-          title="瀑布流"
-        >
-          🌊
-          <span class="btn-text">瀑布流</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'carousel' }"
-          @click="viewMode = 'carousel'"
-          title="旋转木马"
-        >
-          🎠
-          <span class="btn-text">木马</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'stack' }"
-          @click="viewMode = 'stack'"
-          title="照片堆叠"
-        >
-          📚
-          <span class="btn-text">堆叠</span>
-        </button>
-        <button
-          class="toggle-btn"
-          :class="{ 'active': viewMode === 'capsule' }"
-          @click="viewMode = 'capsule'"
-          title="时光胶囊"
-        >
-          💎
-          <span class="btn-text">胶囊</span>
-        </button>
       </div>
     </header>
 
@@ -168,49 +110,6 @@
         </div>
       </div>
 
-      <!-- 时光轮盘视图 -->
-      <TimeWheelGallery
-        v-if="galleryList.length > 0 && viewMode === 'wheel'"
-        :photos="wheelPhotos"
-        @like="handleWheelLike"
-        @view="handleWheelView"
-      />
-
-      <!-- 时间线视图 -->
-      <PhotoTimelineGallery
-        v-if="galleryList.length > 0 && viewMode === 'timeline'"
-        :photos="galleryList"
-        @like="handleLike"
-      />
-
-      <!-- 瀑布流视图 -->
-      <WaterfallGallery
-        v-if="galleryList.length > 0 && viewMode === 'waterfall'"
-        :photos="galleryList"
-        @like="handleLike"
-        @load-more="handleLoadMore"
-      />
-
-      <!-- 旋转木马视图 -->
-      <CarouselGallery
-        v-if="galleryList.length > 0 && viewMode === 'carousel'"
-        :photos="galleryList"
-        @like="handleLike"
-      />
-
-      <!-- 堆叠视图 -->
-      <StackGallery
-        v-if="galleryList.length > 0 && viewMode === 'stack'"
-        :photos="galleryList"
-        @like="handleLike"
-      />
-
-      <!-- 时光胶囊视图 -->
-      <CapsuleGallery
-        v-if="galleryList.length > 0 && viewMode === 'capsule'"
-        :photos="galleryList"
-        @like="handleLike"
-      />
 
       <!-- 空状态 -->
       <div v-else class="gallery-empty">
@@ -274,23 +173,19 @@ import BabyButton from '../components/Button.vue'
 import BabyModal from '../components/Modal.vue'
 import ImageViewer from '../components/ImageViewer.vue'
 import ImageUploader from '../components/ImageUploader.vue'
-import TimeWheelGallery from '../components/TimeWheelGallery.vue'
-import PhotoTimelineGallery from '../components/PhotoTimelineGallery.vue'
-import WaterfallGallery from '../components/WaterfallGallery.vue'
-import CarouselGallery from '../components/CarouselGallery.vue'
-import StackGallery from '../components/StackGallery.vue'
-import CapsuleGallery from '../components/CapsuleGallery.vue'
 import { fadeInElements, initGoldParticles, touchFeedbackAnimation, createLongPressHandler, scrollToElement, createParallaxEffect } from '../utils/animations'
 import { useGesture } from '@vueuse/gesture'
+import { useConfig } from '../utils/configStore'
 
 const router = useRouter()
+const { loadConfig } = useConfig()
 const galleryList = ref([])
 const viewerOpen = ref(false)
 const viewerIndex = ref(0)
 const showUpload = ref(false)
 const showUploadFab = ref(false)
 const currentPage = ref(1)
-const viewMode = ref('grid') // grid, wheel, timeline, waterfall, carousel, stack, capsule
+const viewMode = ref('grid') // 仅支持网格视图
 const pageSize = 9
 const hasMore = ref(true)
 const loadingMore = ref(false)
@@ -351,6 +246,8 @@ const setAsHomeCover = async (item) => {
   try {
     await setHomeCover(item.id)
     showToast('已设置为首页宝宝照片')
+    // 刷新配置，让首页能够显示新的封面图片
+    await loadConfig(true)
   } catch (e) {
     // 错误提示已在 request 拦截器中处理
   }
@@ -540,26 +437,6 @@ const handleImageError = (event, item) => {
   }
 }
 
-// 时光轮盘视图的数据处理
-const wheelPhotos = computed(() => {
-  return galleryList.value.map((item, index) => ({
-    ...item,
-    date: index + 1 // 模拟日期数据
-  }))
-})
-
-// 处理时光轮盘的点赞
-const handleWheelLike = (item) => {
-  handleLike(item)
-}
-
-// 处理时光轮盘的查看
-const handleWheelView = (item) => {
-  const index = galleryList.value.findIndex(i => i.id === item.id)
-  if (index !== -1) {
-    openViewer(index)
-  }
-}
 
 let cleanupParticles = null
 

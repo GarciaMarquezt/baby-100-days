@@ -13,8 +13,8 @@ async function loadConfig(force = false) {
   state.loading = true
   try {
     const res = await getConfig()
-    // getConfig 经过 request.js 拦截器，直接返回 data（配置 map）
-    state.data = res || {}
+    // getConfig 返回完整的响应对象 {code, msg, data}，需要提取 data 字段
+    state.data = res?.data || {}
     state.loaded = true
   } catch (e) {
     // 失败时保持默认值，页面使用兜底文案

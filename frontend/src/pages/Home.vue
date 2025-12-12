@@ -44,11 +44,13 @@
             class="cover-photo__image"
             :src="homeCoverUrl"
             alt="宝宝照片"
+            @error="handleCoverImageError"
+            @load="handleCoverImageLoad"
           />
         </template>
         <template v-else>
           <div class="cover-photo__placeholder">
-            宝宝照片
+            
           </div>
         </template>
       </div>
@@ -189,7 +191,17 @@ const handleBarrageClick = (danmu) => {
 // 处理弹幕点赞
 const handleBarrageLike = (danmu) => {
   danmu.isLiked = !danmu.isLiked
-  showSuccessToast(danmu.isLiked ? '点赞成功！' : '已取消点赞')
+}
+
+// 处理封面图片加载错误
+const handleCoverImageError = (event) => {
+  console.error('Cover image failed to load:', event.target.src, event)
+  showToast('封面图片加载失败')
+}
+
+// 处理封面图片加载成功
+const handleCoverImageLoad = (event) => {
+  console.log('Cover image loaded successfully:', event.target.src)
 }
 
 // 发送祝福
