@@ -22,6 +22,26 @@
     <!-- 金粉粒子背景 -->
     <canvas id="goldParticles" class="gold-particles"></canvas>
     
+    <!-- 音乐控制按钮 -->
+    <div 
+      class="music-control" 
+      :class="{ 'playing': isMusicPlaying }"
+      @click="toggleMusic"
+    >
+      <div class="music-bar music-bar-1"></div>
+      <div class="music-bar music-bar-2"></div>
+      <div class="music-bar music-bar-3"></div>
+    </div>
+    
+    <!-- 背景音乐 -->
+    <audio 
+      ref="bgmAudio" 
+      loop 
+      :src="bgmUrl"
+      @play="isMusicPlaying = true"
+      @pause="isMusicPlaying = false"
+    ></audio>
+    
     <!-- 顶部导航栏 -->
     <header class="home-header">
       <div class="home-header__logo">
@@ -55,24 +75,69 @@
         </template>
       </div>
       
-      <h1 class="cover-title">{{ babyName }} · 百日</h1>
+      <h1 class="cover-title">{{ babyName }} · 百日之喜</h1>
+      <h1 class="cover-title">乔迁新居·进火之喜</h1>
       <p class="cover-subtitle">{{ partyDate }} · {{ partyAddress }}</p>
-      
-      <div class="cover-actions">
-        <BabyButton type="primary" @click="goToInvitation">
-          查看电子请帖
-        </BabyButton>
-        <div class="cover-actions__hint">
-          <span class="hint-arrow">⬆</span>
-          <span class="hint-text">轻触这里查看电子请帖</span>
-        </div>
-      </div>
     </div>
 
 
     <!-- 邀请函内容 -->
-    <div class="invite-content">
-      <!-- 位置信息 -->
+    <div class="invite-content" ref="invitationSection">
+      <!-- 合并后的请帖主卡片：祝福 + 双喜说明 + 邀请人信息 -->
+      <div class="blessing-section">
+        <div class="blessing-header">
+          <div class="blessing-icon">🧧</div>
+          <h3 class="blessing-title">诚挚邀请</h3>
+        </div>
+        <p class="blessing-text" v-html="invitationBlessing"></p>
+
+        <div class="blessing-extra">
+          <p class="blessing-extra__title">双喜同庆 · 百日 · 乔迁</p>
+          <p class="blessing-extra__desc">
+            从呱呱坠地到百日圆满，新居焕彩迎宾朋<div/>
+            愿与您共享这份喜悦与感动！
+          </p>
+          <p class="blessing-extra__host">
+            敬邀：{{ hostNames }}<div/> 携爱子 {{ babyName }}
+          </p>
+          <p class="blessing-extra__sign">恭候您的到来</p>
+        </div>
+      </div>
+
+      <!-- 写真展示（首页仅预览固定数量，点击进入全屏浏览器） -->
+      <section class="photo-showcase" ref="photoSection">
+        <div class="section-heading">
+          <div class="section-heading__icon">📸</div>
+          <div class="section-heading__text">
+            <h3>精选</h3>
+          </div>
+        </div>
+
+        <div
+          v-for="(set, idx) in photoSets"
+          :key="idx"
+          class="photo-set"
+        >
+          <div class="photo-grid">
+            <div
+              v-for="(photo, pIndex) in set.photos"
+              :key="pIndex"
+              class="photo-card"
+              @click="openPhotoViewer(idx, pIndex)"
+            >
+              <img
+                class="photo-card__image"
+                :src="photo.url"
+                :alt="photo.caption || set.title"
+                @error="handlePhotoError"
+              />
+              <div class="photo-card__caption" v-if="photo.caption">{{ photo.caption }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 地点与操作 -->
       <BabyCard>
         <div class="location-info" @click="showMapSheet = true">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin-right: 8px;">
@@ -85,12 +150,6 @@
           </div>
         </div>
       </BabyCard>
-
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <BabyButton type="ghost" @click="$router.push('/gallery')">相册</BabyButton>
-        <BabyButton type="primary" @click="$router.push('/register')">赴宴登记</BabyButton>
-      </div>
 
       <!-- 简化的送祝福输入区域 -->
       <div class="simple-blessing-input">
@@ -145,6 +204,15 @@
       </div>
     </van-dialog>
   </div>
+
+  <!-- 首页写真全屏浏览器 -->
+  <ImageViewer
+    :images="flattenedPhotos"
+    :index="photoViewerIndex"
+    :open="photoViewerOpen"
+    @update:open="photoViewerOpen = $event"
+    @update:index="photoViewerIndex = $event"
+  />
 </template>
 
 <script setup>
@@ -155,21 +223,61 @@ import { gsap } from 'gsap'
 import BabyButton from '../components/Button.vue'
 import BabyCard from '../components/Card.vue'
 import MessageBarrage from '../components/MessageBarrage.vue'
+import ImageViewer from '../components/ImageViewer.vue'
 import { ThemeManager } from '../utils/theme'
 import { initGoldParticles, slideInAnimation, bounceInAnimation } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
 import { sendMessage } from '../api/message'
+import { getGalleryList } from '../api/gallery'
 
 const router = useRouter()
 const { loadConfig, getValue } = useConfig()
 const messageBarrage = ref(null)
 const newBlessing = ref('')
+const invitationSection = ref(null)
+const photoSection = ref(null)
+
+// 首页写真两区数据
+const photoSets = ref([
+  { title: '写真一区', description: '', photos: [] },
+  { title: '写真二区', description: '', photos: [] }
+])
+const MAX_ZONE_PREVIEW = 4
+const photoViewerOpen = ref(false)
+const photoViewerIndex = ref(0)
 
 // 动态配置
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
 const partyDate = computed(() => getValue('party_date', '2026-01-10 12:00'))
 const partyAddress = computed(() => getValue('party_address', '祁阳鑫利大酒店四楼1号会议厅'))
 const homeCoverUrl = computed(() => getValue('home_cover_thumb', '') || getValue('home_cover_image', ''))
+const hostNames = computed(() => getValue('host_names', '严蓬春 · 田梦'))
+const invitationBlessing = computed(() => {
+  const defaultText = '祥龙贺岁，福满人间！<br>金猴纳福，瑞气盈门！'
+  const raw = getValue('invitation_blessing', '')
+  return raw || defaultText
+})
+
+// 背景音乐
+const bgmUrl = computed(() => {
+  // 可以从配置中读取音乐URL，如果没有则使用默认值
+  const defaultUrl = 'https://music.163.com/song/media/outer/url?id=1860587682.mp3'
+  return getValue('bgm_url', defaultUrl)
+})
+const bgmAudio = ref(null)
+const isMusicPlaying = ref(false)
+const hasUserInteracted = ref(false)
+
+// 扁平化后的全部写真，用于全屏浏览器
+const flattenedPhotos = computed(() =>
+  photoSets.value.flatMap(set =>
+    set.photos.map(p => ({
+      ...p,
+      imageUrl: p.url,    // 适配 ImageViewer 的字段
+      thumbUrl: p.url
+    }))
+  )
+)
 
 // 主题切换
 const isDark = ref(false)
@@ -178,9 +286,34 @@ const toggleTheme = () => {
   isDark.value = newTheme === 'dark'
 }
 
-// 跳转到电子请帖
-const goToInvitation = () => {
-  router.push('/invitation')
+// 打开首页写真全屏浏览器
+const openPhotoViewer = (zoneIndex, photoIndex) => {
+  const sets = photoSets.value
+  if (!sets || !sets[zoneIndex]) return
+
+  let index = 0
+  for (let i = 0; i < zoneIndex; i++) {
+    index += sets[i].photos.length
+  }
+  index += photoIndex
+
+  if (index < 0 || index >= flattenedPhotos.value.length) return
+
+  photoViewerIndex.value = index
+  photoViewerOpen.value = true
+}
+
+// 长页锚点
+const scrollToInvitation = () => {
+  nextTick(() => {
+    invitationSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+const scrollToPhotos = () => {
+  nextTick(() => {
+    photoSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 // 处理弹幕点击
@@ -202,6 +335,11 @@ const handleCoverImageError = (event) => {
 // 处理封面图片加载成功
 const handleCoverImageLoad = (event) => {
   console.log('Cover image loaded successfully:', event.target.src)
+}
+
+const handlePhotoError = (event) => {
+  event.target.style.opacity = '0.4'
+  event.target.alt = '图片加载失败'
 }
 
 // 发送祝福
@@ -303,15 +441,72 @@ const checkAdminPassword = () => {
   }
 }
 
+// 音乐控制
+const toggleMusic = () => {
+  if (!bgmAudio.value) return
+  
+  if (isMusicPlaying.value) {
+    bgmAudio.value.pause()
+  } else {
+    bgmAudio.value.play().catch(err => {
+      console.warn('播放音乐失败:', err)
+      showToast('音乐播放失败，请检查网络或稍后重试')
+    })
+  }
+}
+
 // 初始化
 let cleanupParticles = null
 
+// 用户交互处理函数
+let handleFirstInteraction = null
+
 onMounted(async () => {
+  // 监听用户首次交互，自动播放音乐
+  handleFirstInteraction = () => {
+    if (!hasUserInteracted.value && bgmAudio.value) {
+      hasUserInteracted.value = true
+      bgmAudio.value.play().catch(err => {
+        console.warn('自动播放音乐失败:', err)
+        // 自动播放失败是正常的，需要用户手动点击
+      })
+    }
+  }
+  
+  // 监听页面点击、触摸等交互事件
+  document.addEventListener('click', handleFirstInteraction, { once: true })
+  document.addEventListener('touchstart', handleFirstInteraction, { once: true })
   ThemeManager.init()
   isDark.value = ThemeManager.getTheme() === 'dark'
 
   // 加载动态配置（宝宝姓名、时间、地点等）
   loadConfig()
+
+  // 加载首页写真分区（从相册接口按 zone=1 / 2 读取）
+  try {
+    const [zone1, zone2] = await Promise.all([
+      getGalleryList({ zone: 1 }),
+      getGalleryList({ zone: 2 })
+    ])
+
+    const toPhotos = (list) => {
+      if (!Array.isArray(list)) return []
+      return list
+        .filter(item => item.category === 'photo')
+        .map(item => ({
+          url: item.imageUrl || item.thumbUrl,
+          caption: item.description || ''
+        }))
+    }
+
+    const list1 = Array.isArray(zone1?.data) ? zone1.data : []
+    const list2 = Array.isArray(zone2?.data) ? zone2.data : []
+
+    photoSets.value[0].photos = toPhotos(list1)
+    photoSets.value[1].photos = toPhotos(list2)
+  } catch (e) {
+    console.warn('加载首页写真失败，将继续使用默认占位布局', e)
+  }
 
   await nextTick()
 
@@ -442,6 +637,16 @@ onUnmounted(() => {
   if (cleanupParticles) {
     cleanupParticles()
   }
+  // 清理事件监听器
+  if (handleFirstInteraction) {
+    document.removeEventListener('click', handleFirstInteraction)
+    document.removeEventListener('touchstart', handleFirstInteraction)
+  }
+  // 停止音乐
+  if (bgmAudio.value) {
+    bgmAudio.value.pause()
+    bgmAudio.value = null
+  }
 })
 </script>
 
@@ -479,6 +684,73 @@ onUnmounted(() => {
   height: 100%;
   pointer-events: none;
   z-index: 0;
+}
+
+/* 音乐控制按钮 */
+.music-control {
+  position: fixed;
+  top: calc(var(--safe-area-top) + var(--spacing-md) + 50px);
+  right: var(--spacing-md);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 99;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.music-control:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+.music-bar {
+  width: 3px;
+  background: var(--accent-solid);
+  border-radius: 2px;
+  height: 10px;
+  transition: height 0.3s ease;
+}
+
+.music-control.playing .music-bar-1 {
+  animation: musicDance 0.5s infinite alternate;
+}
+
+.music-control.playing .music-bar-2 {
+  animation: musicDance 0.7s infinite alternate;
+}
+
+.music-control.playing .music-bar-3 {
+  animation: musicDance 0.6s infinite alternate;
+}
+
+@keyframes musicDance {
+  from {
+    height: 8px;
+  }
+  to {
+    height: 20px;
+  }
+}
+
+/* 深色模式下的音乐按钮 */
+[data-theme='dark'] .music-control {
+  background: rgba(37, 32, 24, 0.9);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .music-control:hover {
+  background: rgba(37, 32, 24, 1);
+}
+
+[data-theme='dark'] .music-bar {
+  background: var(--gold);
 }
 
 /* 顶部导航栏 */
@@ -742,6 +1014,9 @@ onUnmounted(() => {
 /* 邀请函内容 */
 .invite-content {
   margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
 
@@ -779,6 +1054,301 @@ onUnmounted(() => {
   .cover-photo {
     width: 180px;
     height: 180px;
+  }
+}
+
+/* 请帖主体（移植自电子请帖页面的风格化块） */
+.blessing-section {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  text-align: center;
+}
+
+.blessing-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.blessing-icon {
+  font-size: 28px;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.blessing-title {
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
+  margin: 0;
+}
+
+.blessing-text {
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.8;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.05) rotate(90deg); }
+  50% { transform: scale(1) rotate(180deg); }
+  75% { transform: scale(1.05) rotate(270deg); }
+}
+
+.blessing-extra {
+  margin-top: var(--spacing-lg);
+  border-top: 1px dashed rgba(212, 175, 55, 0.4);
+  padding-top: var(--spacing-md);
+  text-align: center;
+}
+
+.blessing-extra__title {
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
+  margin-bottom: var(--spacing-xs);
+}
+
+.blessing-extra__desc {
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--spacing-sm);
+}
+
+.blessing-extra__host {
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.blessing-extra__sign {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-body);
+  color: var(--accent-solid);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 深色模式适配 - 邀请函区域 */
+[data-theme='dark'] .blessing-section {
+  background: linear-gradient(135deg, #252018 0%, #1F1A14 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 20px rgba(199, 62, 29, 0.3), 0 0 8px rgba(212, 175, 55, 0.15);
+}
+
+[data-theme='dark'] .blessing-extra {
+  border-top-color: rgba(212, 175, 55, 0.3);
+}
+
+/* 写真展示 */
+.photo-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.section-heading__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section-heading__text h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.section-heading__text p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.photo-set {
+  background: linear-gradient(135deg, #FFF 0%, #FAF8F3 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 深色模式适配 - 写真区域 */
+[data-theme='dark'] .photo-set {
+  background: linear-gradient(135deg, #252018 0%, #1F1A14 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 20px rgba(199, 62, 29, 0.3), 0 0 8px rgba(212, 175, 55, 0.15);
+}
+
+[data-theme='dark'] .photo-set::after {
+  background: linear-gradient(to left, rgba(37, 32, 24, 0.95) 0%, transparent 100%);
+}
+
+/* 右侧滚动提示渐变遮罩 */
+.photo-set::after {
+  content: '';
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  bottom: calc(var(--spacing-lg) + var(--spacing-sm));
+  width: 30px;
+  background: linear-gradient(to left, rgba(250, 248, 243, 0.9) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.photo-set__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.set-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-solid);
+  font-size: 16px;
+}
+
+.set-desc {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, 1fr);
+  gap: var(--spacing-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  padding-bottom: var(--spacing-sm);
+  position: relative;
+  z-index: 0;
+  /* 滚动条样式 - 桌面端 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.5) rgba(212, 175, 55, 0.1);
+}
+
+/* Webkit 浏览器滚动条样式 - 桌面端 */
+.photo-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.photo-grid::-webkit-scrollbar-track {
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 4px;
+}
+
+.photo-grid::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.6);
+  border-radius: 4px;
+}
+
+.photo-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.8);
+}
+
+/* 移动端滚动条增强 */
+@media (max-width: 768px) {
+  .photo-grid {
+    padding-bottom: var(--spacing-md);
+    /* 移动端滚动条更明显 */
+    scrollbar-width: auto;
+    scrollbar-color: rgba(212, 175, 55, 0.7) rgba(212, 175, 55, 0.15);
+  }
+
+  .photo-grid::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .photo-grid::-webkit-scrollbar-track {
+    background: rgba(212, 175, 55, 0.15);
+    border-radius: 5px;
+  }
+
+  .photo-grid::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.7);
+    border-radius: 5px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+  }
+
+  .photo-grid::-webkit-scrollbar-thumb:active {
+    background: rgba(212, 175, 55, 0.9);
+  }
+
+  /* 移动端渐变遮罩更明显 */
+  .photo-set::after {
+    width: 50px;
+    background: linear-gradient(to left, rgba(250, 248, 243, 1) 0%, rgba(250, 248, 243, 0.8) 50%, transparent 100%);
+  }
+
+  [data-theme='dark'] .photo-set::after {
+    background: linear-gradient(to left, rgba(37, 32, 24, 1) 0%, rgba(37, 32, 24, 0.8) 50%, transparent 100%);
+  }
+}
+
+.photo-card {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-card__image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-card__caption {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-small);
+  color: var(--text-primary);
+}
+
+/* 深色模式适配 - 照片卡片 */
+[data-theme='dark'] .photo-card {
+  background: var(--card-bg);
+  box-shadow: 0 2px 12px rgba(199, 62, 29, 0.2);
+}
+
+@media (max-width: 480px) {
+  .invitation-details {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }
 </style>

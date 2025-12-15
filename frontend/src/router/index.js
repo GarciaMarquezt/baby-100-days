@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
     { path: '/', name: 'Home', component: () => import('../pages/Home.vue') },
     { path: '/invitation', name: 'Invitation', component: () => import('../pages/Invitation.vue') },
-    { path: '/register', name: 'Register', component: () => import('../pages/Register.vue') },
     { path: '/message', name: 'Message', component: () => import('../pages/Message.vue') },
     { path: '/gallery', name: 'Gallery', component: () => import('../pages/GalleryWall.vue') },
     

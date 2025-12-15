@@ -134,12 +134,6 @@
               </svg>
               导航到会场
             </BabyButton>
-            <BabyButton type="primary" @click="goToRegister" class="action-btn">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2l1.09 3.26h3.26l-2.64 1.91 1.09 3.26L8 8.52l-2.8 2.01 1.09-3.26-2.64-1.91h3.26z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              我要出席
-            </BabyButton>
           </div>
         </div>
       </transition>
@@ -149,13 +143,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { gsap } from 'gsap'
 import BabyButton from '../components/Button.vue'
 import { initGoldParticles, bounceInAnimation, slideInAnimation, sparkleAnimation } from '../utils/animations'
 import { useConfig } from '../utils/configStore'
 
-const router = useRouter()
 const { loadConfig, getValue } = useConfig()
 
 // 响应式数据
@@ -319,10 +311,6 @@ const openInvitation = async () => {
 const openMap = () => {
   const mapUrl = `https://uri.amap.com/marker?position=111.836,26.5755&name=${encodeURIComponent(partyAddress.value)}&src=invitation&coordinate=gaode&callnative=1`
   window.location.href = mapUrl
-}
-
-const goToRegister = () => {
-  router.push('/register')
 }
 
 // 生命周期

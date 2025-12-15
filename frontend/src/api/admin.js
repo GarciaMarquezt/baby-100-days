@@ -43,6 +43,30 @@ export function deleteGallery(data) {
     })
 }
 
+export function updateGallery(data) {
+    return request({
+        url: '/admin/gallery/update',
+        method: 'post',
+        data
+    })
+}
+
+export function batchMoveGallery(data) {
+    return request({
+        url: '/admin/gallery/batch-move',
+        method: 'post',
+        data
+    })
+}
+
+export function batchDeleteGallery(data) {
+    return request({
+        url: '/admin/gallery/batch-delete',
+        method: 'post',
+        data
+    })
+}
+
 // 上传接口地址 (用于 Vant Uploader 直接调用)
 export const uploadUrl = '/api/admin/gallery/upload';
 

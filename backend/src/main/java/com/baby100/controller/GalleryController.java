@@ -29,12 +29,16 @@ public class GalleryController {
     @Value("${app.upload.dir:./uploads/}")
     private String uploadDir;
 
-    // 获取列表（公开）
+    // 获取列表（公开，可选按分区过滤）
     @GetMapping("/list")
-    public Result<List<Gallery>> list() {
-        List<Gallery> list = galleryService.list(new LambdaQueryWrapper<Gallery>()
+    public Result<List<Gallery>> list(@RequestParam(required = false) Integer zone) {
+        LambdaQueryWrapper<Gallery> wrapper = new LambdaQueryWrapper<Gallery>()
                 .orderByDesc(Gallery::getSort)
-                .orderByDesc(Gallery::getCreateTime));
+                .orderByDesc(Gallery::getCreateTime);
+        if (zone != null) {
+            wrapper.eq(Gallery::getZone, zone);
+        }
+        List<Gallery> list = galleryService.list(wrapper);
         // 确保 likes 不为 null
         list.forEach(item -> {
             if (item.getLikes() == null) {
@@ -45,15 +49,20 @@ public class GalleryController {
     }
 
     /**
-     * 分页获取列表（公开）
+     * 分页获取列表（公开，可选按分区过滤）
      */
     @GetMapping("/page")
     public Result<IPage<Gallery>> page(@RequestParam(defaultValue = "1") Integer page,
-                                       @RequestParam(defaultValue = "10") Integer size) {
+                                       @RequestParam(defaultValue = "10") Integer size,
+                                       @RequestParam(required = false) Integer zone) {
         Page<Gallery> pageParam = new Page<>(page, size);
-        IPage<Gallery> result = galleryService.page(pageParam, new LambdaQueryWrapper<Gallery>()
+        LambdaQueryWrapper<Gallery> wrapper = new LambdaQueryWrapper<Gallery>()
                 .orderByDesc(Gallery::getSort)
-                .orderByDesc(Gallery::getCreateTime));
+                .orderByDesc(Gallery::getCreateTime);
+        if (zone != null) {
+            wrapper.eq(Gallery::getZone, zone);
+        }
+        IPage<Gallery> result = galleryService.page(pageParam, wrapper);
         return Result.success(result);
     }
 

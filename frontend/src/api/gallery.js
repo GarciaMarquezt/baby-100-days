@@ -1,17 +1,18 @@
 import request from '../utils/request'
 
-export function getGalleryList() {
+export function getGalleryList(params = {}) {
     return request({
         url: '/gallery/list',
-        method: 'get'
+        method: 'get',
+        params
     })
 }
 
-export function getGalleryPage(page = 1, size = 10) {
+export function getGalleryPage(page = 1, size = 10, extraParams = {}) {
     return request({
         url: '/gallery/page',
         method: 'get',
-        params: { page, size }
+        params: { page, size, ...extraParams }
     })
 }
 

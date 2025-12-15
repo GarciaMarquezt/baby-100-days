@@ -48,15 +48,21 @@ public class AdminGalleryController {
 
     @GetMapping("/list")
     public Result<IPage<Gallery>> list(@RequestParam(defaultValue = "1") Integer page,
-                                       @RequestParam(defaultValue = "20") Integer size) {
+                                       @RequestParam(defaultValue = "20") Integer size,
+                                       @RequestParam(required = false) Integer zone) {
         Page<Gallery> pageParam = new Page<>(page, size);
-        return Result.success(galleryService.page(pageParam, new LambdaQueryWrapper<Gallery>()
+        LambdaQueryWrapper<Gallery> wrapper = new LambdaQueryWrapper<Gallery>()
                 .orderByDesc(Gallery::getSort)
-                .orderByDesc(Gallery::getCreateTime)));
+                .orderByDesc(Gallery::getCreateTime);
+        if (zone != null) {
+            wrapper.eq(Gallery::getZone, zone);
+        }
+        return Result.success(galleryService.page(pageParam, wrapper));
     }
 
     @PostMapping("/upload")
-    public Result<String> upload(@RequestParam("file") MultipartFile file) {
+    public Result<String> upload(@RequestParam("file") MultipartFile file,
+                                 @RequestParam(value = "zone", required = false, defaultValue = "1") Integer zone) {
         if (file.isEmpty()) return Result.error(1001, "文件为空");
 
         String fileName = file.getOriginalFilename();
@@ -172,6 +178,7 @@ public class AdminGalleryController {
             gallery.setThumbUrl(thumbUrl);
             gallery.setFileHash(fileHash);
             gallery.setCategory(category);
+            gallery.setZone(zone);
             gallery.setCreateTime(LocalDateTime.now());
             gallery.setSort(0);
             galleryService.save(gallery);
@@ -268,6 +275,67 @@ public class AdminGalleryController {
     public Result<Boolean> delete(@RequestBody Gallery gallery) {
         // TODO: 最好也删除物理文件
         return Result.success(galleryService.removeById(gallery.getId()));
+    }
+
+    @PostMapping("/update")
+    public Result<Boolean> update(@RequestBody Gallery gallery) {
+        if (gallery.getId() == null) {
+            return Result.error(2001, "ID不能为空");
+        }
+        Gallery exist = galleryService.getById(gallery.getId());
+        if (exist == null) {
+            return Result.error(2001, "图片不存在");
+        }
+        if (gallery.getZone() != null) {
+            exist.setZone(gallery.getZone());
+        }
+        galleryService.updateById(exist);
+        return Result.success(true);
+    }
+
+    @PostMapping("/batch-move")
+    public Result<Boolean> batchMove(@RequestBody java.util.Map<String, Object> params) {
+        @SuppressWarnings("unchecked")
+        java.util.List<Integer> ids = (java.util.List<Integer>) params.get("ids");
+        Integer zone = (Integer) params.get("zone");
+        
+        if (ids == null || ids.isEmpty()) {
+            return Result.error(2001, "ID列表不能为空");
+        }
+        if (zone == null || (zone != 1 && zone != 2)) {
+            return Result.error(2001, "区域参数无效");
+        }
+        
+        int updated = 0;
+        for (Integer id : ids) {
+            Gallery gallery = galleryService.getById(id);
+            if (gallery != null) {
+                gallery.setZone(zone);
+                galleryService.updateById(gallery);
+                updated++;
+            }
+        }
+        
+        return Result.success(true);
+    }
+
+    @PostMapping("/batch-delete")
+    public Result<Boolean> batchDelete(@RequestBody java.util.Map<String, Object> params) {
+        @SuppressWarnings("unchecked")
+        java.util.List<Integer> ids = (java.util.List<Integer>) params.get("ids");
+        
+        if (ids == null || ids.isEmpty()) {
+            return Result.error(2001, "ID列表不能为空");
+        }
+        
+        int deleted = 0;
+        for (Integer id : ids) {
+            if (galleryService.removeById(id)) {
+                deleted++;
+            }
+        }
+        
+        return Result.success(true);
     }
 
     /**

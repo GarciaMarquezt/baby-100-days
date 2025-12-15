@@ -7,7 +7,7 @@ import {
     Button, Form, Field, CellGroup, RadioGroup, Radio,
     Stepper, Toast, Dialog, Uploader, Switch, Popup, Icon,
     NavBar, Tabbar, TabbarItem, List, SwipeCell, Cell, Tag, Image as VanImage,
-    Tab, Tabs, Search, ActionSheet
+    Tab, Tabs, Search, ActionSheet, Checkbox
 } from 'vant';
 import 'vant/lib/index.css';
 // 引入 Vue Lazyload
@@ -50,6 +50,7 @@ app.use(Button)
    .use(Tab)
    .use(Tabs)
    .use(Search)
-   .use(ActionSheet);
+   .use(ActionSheet)
+   .use(Checkbox);
 
 app.mount('#app')

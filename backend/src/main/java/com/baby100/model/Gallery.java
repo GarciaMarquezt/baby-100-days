@@ -20,7 +20,15 @@ public class Gallery {
      * 文件内容哈希（用于去重）
      */
     private String fileHash;
+    /**
+     * 类型：photo / video
+     */
     private String category;
+
+    /**
+     * 展示分区（1=写真区一，2=写真区二，预留更多分区扩展）
+     */
+    private Integer zone;
     private Integer likes; // 点赞数
     /**
      * 置顶排序值，越大越靠前；未置顶为 0
