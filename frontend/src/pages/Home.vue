@@ -36,8 +36,11 @@
     <!-- 背景音乐 -->
     <audio 
       ref="bgmAudio" 
-      loop 
       :src="bgmUrl"
+      preload="auto"
+      autoplay
+      playsinline
+      webkit-playsinline
       @play="isMusicPlaying = true"
       @pause="isMusicPlaying = false"
     ></audio>
@@ -298,9 +301,11 @@ const bgmUrl = computed(() => {
 const bgmAudio = ref(null)
 const isMusicPlaying = ref(false)
 const hasUserInteracted = ref(false)
-const bgmStartAt = 60 // 秒，进入首页后从该时间开始播放（可根据需要调整）
+const bgmStartAt = 58 // 秒，进入首页后从该时间开始播放（可根据需要调整）
 let bgmSeekApplied = false
+let bgmSeekListenerAttached = false
 let bgmAutoPlayTried = false
+let bgmMutedUntilGesture = true
 
 // 背景音乐调试日志
 const logBgmEvent = (eventName, extra = {}) => {
@@ -314,6 +319,48 @@ const logBgmEvent = (eventName, extra = {}) => {
     ...extra
   }
   console.log('[BGM]', info)
+}
+
+const ensureBgmOffset = () => {
+  const audio = bgmAudio.value
+  if (!audio || bgmSeekApplied || !Number.isFinite(bgmStartAt) || bgmStartAt <= 0) return
+
+  if (audio.readyState >= 1 && Number.isFinite(audio.duration)) {
+    const target = Math.min(bgmStartAt, Math.max(0, audio.duration - 0.5))
+    try {
+      audio.currentTime = target
+      bgmSeekApplied = true
+      logBgmEvent('seek-applied', { currentTime: audio.currentTime, duration: audio.duration })
+    } catch (err) {
+      console.warn('BGM seek failed:', err)
+    }
+    return
+  }
+
+  if (!bgmSeekListenerAttached) {
+    bgmSeekListenerAttached = true
+    audio.addEventListener('loadedmetadata', () => {
+      bgmSeekListenerAttached = false
+      ensureBgmOffset()
+    }, { once: true })
+  }
+}
+
+const playBgm = async (reason = 'manual') => {
+  if (!bgmAudio.value) return
+  // 首次交互前保持静音，交互后恢复音量
+  if (bgmMutedUntilGesture && reason !== 'autoplay') {
+    bgmMutedUntilGesture = false
+    bgmAudio.value.muted = false
+  }
+  ensureBgmOffset()
+  try {
+    await bgmAudio.value.play()
+    logBgmEvent('play-request-success', { reason, currentTime: bgmAudio.value.currentTime })
+  } catch (err) {
+    logBgmEvent('play-request-fail', { reason, error: err?.message })
+    throw err
+  }
 }
 
 // 扁平化后的全部写真，用于全屏浏览器
@@ -496,7 +543,7 @@ const toggleMusic = () => {
   if (isMusicPlaying.value) {
     bgmAudio.value.pause()
   } else {
-    bgmAudio.value.play().catch(err => {
+    playBgm('toggle').catch(err => {
       console.warn('播放音乐失败:', err)
       showToast('音乐播放失败，请检查网络或稍后重试')
     })
@@ -510,13 +557,21 @@ let cleanupParticles = null
 let handleFirstInteraction = null
 
 onMounted(async () => {
+  // 为了通过部分浏览器的自动播放策略，先静音，等待用户交互后再还原
+  if (bgmAudio.value) {
+    bgmAudio.value.muted = true
+  }
+
   // 监听用户首次交互，自动播放音乐
   handleFirstInteraction = () => {
     if (!hasUserInteracted.value && bgmAudio.value) {
       hasUserInteracted.value = true
-      bgmAudio.value.play().catch(err => {
-        console.warn('自动播放音乐失败:', err)
-        // 自动播放失败是正常的，需要用户手动点击
+      // 交互后取消静音再尝试播放
+      bgmMutedUntilGesture = false
+      bgmAudio.value.muted = false
+      playBgm('first-interaction').catch(err => {
+        // 若仍因策略限制失败，静默处理，用户可点击按钮再次尝试
+        logBgmEvent('first-interaction-play-fail', { error: err?.message })
       })
     }
   }
@@ -525,7 +580,7 @@ onMounted(async () => {
   const tryAutoPlay = (reason = 'unknown') => {
     if (!bgmAudio.value || bgmAutoPlayTried) return
     bgmAutoPlayTried = true
-    bgmAudio.value.play().then(() => {
+    playBgm('autoplay').then(() => {
       logBgmEvent('autoplay-success', { reason })
     }).catch(err => {
       bgmAutoPlayTried = false // 允许后续交互再次尝试
@@ -537,23 +592,30 @@ onMounted(async () => {
   const attachAudioDebug = () => {
     if (!bgmAudio.value) return
     const a = bgmAudio.value
-    a.addEventListener('loadedmetadata', () => logBgmEvent('loadedmetadata', { duration: a.duration }))
+    a.addEventListener('loadedmetadata', () => {
+      // 每次音频源或元数据变更时重置偏移标记，确保始终从 bgmStartAt 开始
+      bgmSeekApplied = false
+      logBgmEvent('loadedmetadata', { duration: a.duration })
+      ensureBgmOffset()
+    })
     a.addEventListener('canplay', () => {
       logBgmEvent('canplay')
-      if (!bgmSeekApplied && Number.isFinite(bgmStartAt) && bgmStartAt > 0 && a.duration) {
-        try {
-          a.currentTime = Math.min(bgmStartAt, a.duration - 0.5)
-          bgmSeekApplied = true
-          logBgmEvent('seek-on-canplay', { currentTime: a.currentTime })
-        } catch (err) {
-          console.warn('BGM seek failed:', err)
-        }
-      }
+      ensureBgmOffset()
       tryAutoPlay('canplay')
     })
     a.addEventListener('play', () => logBgmEvent('play'))
     a.addEventListener('pause', () => logBgmEvent('pause'))
-    a.addEventListener('ended', () => logBgmEvent('ended'))
+    a.addEventListener('ended', () => {
+      // 一首播放结束：不自动循环，标记下次从 bgmStartAt 重新开始
+      bgmSeekApplied = false
+      logBgmEvent('ended', { currentTime: a.currentTime })
+      try {
+        // 重置到 0，下一次点击播放时会通过 ensureBgmOffset 跳到 60s
+        a.currentTime = 0
+      } catch (err) {
+        console.warn('reset currentTime on ended failed:', err)
+      }
+    })
     a.addEventListener('stalled', () => logBgmEvent('stalled'))
     a.addEventListener('error', () => logBgmEvent('error', { error: a.error }))
     logBgmEvent('init')
