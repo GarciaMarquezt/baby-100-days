@@ -153,7 +153,7 @@ const { loadConfig, getValue } = useConfig()
 // 响应式数据
 const isOpened = ref(false)
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
-const partyDate = computed(() => getValue('party_date', '2026年1月10日 12:08'))
+const partyDate = computed(() => getValue('party_date', '2026年1月10日 12:18'))
 const partyAddress = computed(() => getValue('party_address', '祁阳鑫利大酒店四楼1号会议厅'))
 let cleanupParticles = null
 

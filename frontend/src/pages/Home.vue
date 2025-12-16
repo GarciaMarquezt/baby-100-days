@@ -248,7 +248,7 @@ const photoViewerIndex = ref(0)
 
 // 动态配置
 const babyName = computed(() => getValue('baby_name', '屹琛小朋友'))
-const partyDate = computed(() => getValue('party_date', '2026-01-10 12:00'))
+const partyDate = computed(() => getValue('party_date', '2026-01-10 12:18'))
 const partyAddress = computed(() => getValue('party_address', '祁阳鑫利大酒店四楼1号会议厅'))
 const homeCoverUrl = computed(() => getValue('home_cover_thumb', '') || getValue('home_cover_image', ''))
 const hostNames = computed(() => getValue('host_names', '严蓬春 · 田梦'))
@@ -261,12 +261,60 @@ const invitationBlessing = computed(() => {
 // 背景音乐
 const bgmUrl = computed(() => {
   // 可以从配置中读取音乐URL，如果没有则使用默认值
-  const defaultUrl = 'https://music.163.com/song/media/outer/url?id=1860587682.mp3'
+  // 获取音乐URL的方法：
+  // 1. 网易云音乐：搜索"无敌小可爱"，从歌曲页面URL获取ID，格式：https://music.163.com/song/media/outer/url?id=歌曲ID.mp3
+  // 2. 其他平台：QQ音乐、酷狗音乐等也有类似的外链格式
+  // 3. 自己上传：将音乐文件上传到服务器或CDN，使用完整URL
+  // 4. 通过后台配置：在后台管理页面设置 bgm_url 配置项
+  
+  // 备选音乐URL列表（可以切换测试，修改索引号即可）：
+  const musicOptions = [
+    // 选项0：当前默认音乐
+    'https://music.163.com/song/media/outer/url?id=1860587682.mp3',
+    
+    // 选项1：网易云音乐 - "无敌小可爱"（需要替换为实际歌曲ID）
+    // 快速获取方法：
+    // 1. 访问 https://music.163.com
+    // 2. 搜索"无敌小可爱"
+    // 3. 打开歌曲页面，从地址栏复制ID（例如：https://music.163.com/#/song?id=123456789，ID是123456789）
+    // 4. 使用格式：https://music.163.com/song/media/outer/url?id=123456789.mp3
+    // 'https://music.163.com/song/media/outer/url?id=替换为歌曲ID.mp3',
+    
+    // 选项2：其他温馨音乐（可以搜索"宝宝 轻音乐"、"温馨 背景音乐"等）
+    // 'https://music.163.com/song/media/outer/url?id=另一个歌曲ID.mp3',
+    
+    // 选项3：QQ音乐格式（需要替换为实际歌曲ID）
+    // 'https://aqqmusic.tc.qq.com/amobile.music.tc.qq.com/歌曲ID.mp3',
+    
+    // 选项4：如果上传到自己的服务器，使用完整URL
+    // 'https://your-domain.com/audio/wudi-xiaokeai.mp3',
+  ]
+  
+  // 默认使用第一个，或从配置中读取
+  // 要切换音乐，可以修改这里的索引号：musicOptions[0] 改为 musicOptions[1] 等
+  const defaultUrl = musicOptions[0]
   return getValue('bgm_url', defaultUrl)
 })
 const bgmAudio = ref(null)
 const isMusicPlaying = ref(false)
 const hasUserInteracted = ref(false)
+const bgmStartAt = 60 // 秒，进入首页后从该时间开始播放（可根据需要调整）
+let bgmSeekApplied = false
+let bgmAutoPlayTried = false
+
+// 背景音乐调试日志
+const logBgmEvent = (eventName, extra = {}) => {
+  const audio = bgmAudio.value
+  const info = {
+    event: eventName,
+    src: audio?.currentSrc || audio?.src || bgmUrl.value,
+    readyState: audio?.readyState,
+    networkState: audio?.networkState,
+    paused: audio?.paused,
+    ...extra
+  }
+  console.log('[BGM]', info)
+}
 
 // 扁平化后的全部写真，用于全屏浏览器
 const flattenedPhotos = computed(() =>
@@ -472,6 +520,46 @@ onMounted(async () => {
       })
     }
   }
+
+  // 音频事件调试
+  const tryAutoPlay = (reason = 'unknown') => {
+    if (!bgmAudio.value || bgmAutoPlayTried) return
+    bgmAutoPlayTried = true
+    bgmAudio.value.play().then(() => {
+      logBgmEvent('autoplay-success', { reason })
+    }).catch(err => {
+      bgmAutoPlayTried = false // 允许后续交互再次尝试
+      console.warn('BGM autoplay failed:', err)
+      logBgmEvent('autoplay-fail', { reason, error: err?.message })
+    })
+  }
+
+  const attachAudioDebug = () => {
+    if (!bgmAudio.value) return
+    const a = bgmAudio.value
+    a.addEventListener('loadedmetadata', () => logBgmEvent('loadedmetadata', { duration: a.duration }))
+    a.addEventListener('canplay', () => {
+      logBgmEvent('canplay')
+      if (!bgmSeekApplied && Number.isFinite(bgmStartAt) && bgmStartAt > 0 && a.duration) {
+        try {
+          a.currentTime = Math.min(bgmStartAt, a.duration - 0.5)
+          bgmSeekApplied = true
+          logBgmEvent('seek-on-canplay', { currentTime: a.currentTime })
+        } catch (err) {
+          console.warn('BGM seek failed:', err)
+        }
+      }
+      tryAutoPlay('canplay')
+    })
+    a.addEventListener('play', () => logBgmEvent('play'))
+    a.addEventListener('pause', () => logBgmEvent('pause'))
+    a.addEventListener('ended', () => logBgmEvent('ended'))
+    a.addEventListener('stalled', () => logBgmEvent('stalled'))
+    a.addEventListener('error', () => logBgmEvent('error', { error: a.error }))
+    logBgmEvent('init')
+  }
+  attachAudioDebug()
+  tryAutoPlay('mounted')
   
   // 监听页面点击、触摸等交互事件
   document.addEventListener('click', handleFirstInteraction, { once: true })
@@ -1208,16 +1296,9 @@ onUnmounted(() => {
 }
 
 /* 右侧滚动提示渐变遮罩 */
+/* 右侧滚动提示渐变遮罩（反馈：容易形成明显阴影，先关闭） */
 .photo-set::after {
-  content: '';
-  position: absolute;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
-  bottom: calc(var(--spacing-lg) + var(--spacing-sm));
-  width: 30px;
-  background: linear-gradient(to left, rgba(250, 248, 243, 0.9) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 .photo-set__title {
@@ -1305,12 +1386,11 @@ onUnmounted(() => {
 
   /* 移动端渐变遮罩更明显 */
   .photo-set::after {
-    width: 50px;
-    background: linear-gradient(to left, rgba(250, 248, 243, 1) 0%, rgba(250, 248, 243, 0.8) 50%, transparent 100%);
+    display: none;
   }
 
   [data-theme='dark'] .photo-set::after {
-    background: linear-gradient(to left, rgba(37, 32, 24, 1) 0%, rgba(37, 32, 24, 0.8) 50%, transparent 100%);
+    display: none;
   }
 }
 
